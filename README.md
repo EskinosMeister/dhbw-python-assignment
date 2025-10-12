@@ -1,4 +1,4 @@
-## an unapoletically bad readme file
+## an unapologetically bad readme file
 # Was wir haben möchten
 - GUI als Hauptoberfläche
   1. Search

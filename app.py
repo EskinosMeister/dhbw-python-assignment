@@ -1,3 +1,7 @@
+## app.py läuft mit speichern und luftballons 
+
+## app.py mit neuem layout und tabs
+
 import sqlite3
 import hashlib
 import secrets
@@ -9,7 +13,6 @@ from typing import Optional, List, Dict
 
 import streamlit as st
 import aldi_crawler
-import inspect
 from aldi_crawler import scrape_aldi_sued_top
 
 DB_PATH = "prices.db"
@@ -98,25 +101,25 @@ def authenticate(username: str, password: str) -> Optional[dict]:
     return None
 
 
-def save_products_for_user(user_id: int, items: List[Dict]):
+def save_product(user_id: int, item: Dict):
+    """Speichert EIN einzelnes Produkt"""
     conn = db_connect()
     cur = conn.cursor()
     now = datetime.now().isoformat(timespec="seconds")
-    for it in items:
-        cur.execute("""
-            INSERT INTO saved_products(user_id, source, query, title, price, unit_price, url, ts_found, ts_saved)
-            VALUES (?,?,?,?,?,?,?,?,?)
-        """, (
-            user_id,
-            it.get("source"),
-            it.get("query"),
-            it.get("title"),
-            float(it.get("price")) if it.get("price") is not None else None,
-            it.get("unit_price"),
-            it.get("url"),
-            it.get("timestamp") or now,
-            now
-        ))
+    cur.execute("""
+        INSERT INTO saved_products(user_id, source, query, title, price, unit_price, url, ts_found, ts_saved)
+        VALUES (?,?,?,?,?,?,?,?,?)
+    """, (
+        user_id,
+        item.get("source"),
+        item.get("query"),
+        item.get("title"),
+        float(item.get("price")) if item.get("price") is not None else None,
+        item.get("unit_price"),
+        item.get("url"),
+        item.get("timestamp") or now,
+        now
+    ))
     conn.commit()
     conn.close()
 
@@ -135,12 +138,11 @@ def get_saved_products(user_id: int) -> List[Dict]:
     return [dict(zip(keys, r)) for r in rows]
 
 
-def delete_saved_products(user_id: int, ids: List[int]):
-    if not ids:
-        return
+def delete_product(user_id: int, product_id: int):
+    """Löscht EIN einzelnes Produkt"""
     conn = db_connect()
     cur = conn.cursor()
-    cur.executemany("DELETE FROM saved_products WHERE user_id=? AND id=?", [(user_id, i) for i in ids])
+    cur.execute("DELETE FROM saved_products WHERE user_id=? AND id=?", (user_id, product_id))
     conn.commit()
     conn.close()
 
@@ -238,6 +240,8 @@ def show_login_register():
                     st.success(msg) if ok else st.error(msg)
 
 
+# Ersetze nur die show_search_and_results Funktion in deiner app.py
+
 def show_search_and_results(user_id: int):
     st.header("Suche")
     
@@ -248,13 +252,13 @@ def show_search_and_results(user_id: int):
             st.session_state["metro_csv_rows"] = rows
             st.success(f"CSV geladen: {len(rows)} Zeilen (nur für diese Session).")
         else:
-            # Autoload Standarddatei (falls vorhanden)
             if "metro_csv_rows" not in st.session_state:
                 rows = _load_metro_csv_file(METRO_CSV_PATH)
                 if rows:
                     st.session_state["metro_csv_rows"] = rows
                     st.caption(f"Standarddatei erkannt: {METRO_CSV_PATH} ({len(rows)} Zeilen)")
 
+    # SCHRITT 1: SUCHEN
     with st.form("search_form"):
         c1, c2, c3 = st.columns([3, 1, 1.6])
         with c1:
@@ -265,6 +269,7 @@ def show_search_and_results(user_id: int):
             source_choice = st.selectbox("Quelle", ["Aldi Süd", "METRO (CSV)", "Beide"], index=0)
         submitted = st.form_submit_button("Suchen")
 
+    # SCHRITT 2: ERGEBNISSE ZEIGEN UND SPEICHERN
     if submitted and query.strip():
         with st.spinner("Suche läuft..."):
             items: List[Dict] = []
@@ -280,57 +285,77 @@ def show_search_and_results(user_id: int):
             st.warning("Keine Treffer gefunden.")
             return
 
-        st.subheader("Anzeige (Top-Treffer)")
-        editable = [{**it, "Speichern": False} for it in items]
-        edited = st.data_editor(
-            editable,
-            column_config={
-                "Speichern": st.column_config.CheckboxColumn(),
-                "price": st.column_config.NumberColumn("price", step=0.01, format="%.2f"),
-                "url": st.column_config.LinkColumn("url"),
-            },
-            num_rows="fixed",
-            use_container_width=True,
-            key=f"editor_{datetime.now().timestamp()}",
-        )
-        to_save = [row for row in edited if row.get("Speichern")]
-        if st.button("Ausgewählte speichern"):
-            if to_save:
-                cleaned = [{k: v for k, v in r.items() if k != "Speichern"} for r in to_save]
-                save_products_for_user(user_id, cleaned)
-                st.success(f"{len(cleaned)} Produkt(e) gespeichert.")
-            else:
-                st.info("Keine Auswahl zum Speichern.")
+        st.success(f"✅ {len(items)} Produkt(e) gefunden")
+        
+        # ALLE Produkte in EINEM Form mit Checkboxen
+        with st.form("save_form"):
+            st.subheader("Produkte zum Speichern auswählen")
+            
+            selections = []
+            for idx, item in enumerate(items):
+                col1, col2 = st.columns([1, 9])
+                with col1:
+                    # Checkbox für jedes Produkt
+                    selected = st.checkbox("", key=f"cb_{idx}", label_visibility="collapsed")
+                    selections.append(selected)
+                with col2:
+                    st.markdown(f"**{item['title']}**")
+                    st.caption(f"💰 {item['price']:.2f} € | 📦 {item['source']} | {item.get('unit_price', 'N/A')}")
+                st.divider()
+            
+            # EIN Submit-Button für ALLE ausgewählten Produkte
+            save_submitted = st.form_submit_button("✅ Ausgewählte speichern", type="primary")
+            
+            if save_submitted:
+                # Speichere alle ausgewählten Produkte
+                to_save = [items[i] for i, sel in enumerate(selections) if sel]
+                
+                if to_save:
+                    try:
+                        save_products_for_user(user_id, to_save)
+                        st.success(f"🎉 {len(to_save)} Produkt(e) erfolgreich gespeichert!")
+                        st.balloons()
+                    except Exception as e:
+                        st.error(f"❌ Fehler beim Speichern: {e}")
+                else:
+                    st.warning("⚠️ Keine Produkte ausgewählt!")
 
 
 def show_saved_products(user_id: int):
-    st.header("Gespeicherte Produkte")
+    st.header("📦 Meine gespeicherten Produkte")
+    
     rows = get_saved_products(user_id)
+    
     if not rows:
-        st.info("Noch nichts gespeichert.")
+        st.info("ℹ️ Noch keine Produkte gespeichert. Suche oben nach Produkten!")
         return
 
-    for r in rows:
-        r["Auswählen"] = False
-
-    edited = st.data_editor(
-        rows,
-        column_config={
-            "Auswählen": st.column_config.CheckboxColumn(),
-            "price": st.column_config.NumberColumn("price", step=0.01, format="%.2f"),
-            "url": st.column_config.LinkColumn("url"),
-        },
-        hide_index=True,
-        use_container_width=True,
-        key="saved_editor",
-    )
-
-    del_ids = [r["id"] for r in edited if r.get("Auswählen")]
-    if st.button("Ausgewählte löschen"):
-        if del_ids:
-            delete_saved_products(user_id, del_ids)
-            st.success(f"{len(del_ids)} Eintrag/Einträge gelöscht.")
-            st.rerun()
+    st.success(f"✅ Du hast {len(rows)} Produkt(e) gespeichert")
+    st.markdown("---")
+    
+    # NEUE METHODE: Jedes Produkt hat seinen eigenen Löschen-Button
+    for row in rows:
+        col1, col2 = st.columns([4, 1])
+        
+        with col1:
+            st.markdown(f"**{row['title']}**")
+            st.caption(f"Preis: {row['price']:.2f} € | Quelle: {row['source']} | {row.get('unit_price', 'N/A')}")
+            st.caption(f"Gespeichert am: {row['ts_saved'][:10]}")
+            if row.get('url'):
+                st.caption(f"🔗 [{row['url']}]({row['url']})")
+        
+        with col2:
+            # Jedes Produkt hat seinen eigenen Löschen-Button
+            button_key = f"delete_{row['id']}"
+            if st.button("🗑️ Löschen", key=button_key, type="secondary"):
+                try:
+                    delete_product(user_id, row['id'])
+                    st.success("✅ Gelöscht!")
+                    st.rerun()
+                except Exception as e:
+                    st.error(f"❌ Fehler: {e}")
+        
+        st.markdown("---")
 
 
 # =======================
@@ -339,31 +364,33 @@ def show_saved_products(user_id: int):
 def main():
     st.set_page_config(page_title="Produkte-Crawler", page_icon="🛒", layout="wide")
     db_init()
-    
-    # Debug-Info (nach st.set_page_config!)
-    with st.expander("🔧 Debug Info", expanded=False):
-        st.caption(f"aldi_crawler geladen aus: {aldi_crawler.__file__}")
-        st.caption(f"Signatur: {inspect.signature(aldi_crawler.scrape_aldi_sued_top)}")
 
-    left, right = st.columns([6, 1])
-    with left:
-        st.title("🛒 Produkt-Suche & Speicherung (Aldi live, METRO via CSV)")
-    with right:
-        if "user" in st.session_state:
+    st.title("🛒 Produkt-Suche & Preisvergleich")
+    st.caption("Finde die besten Preise bei Aldi Süd und METRO")
+
+    if "user" in st.session_state:
+        col1, col2 = st.columns([6, 1])
+        with col1:
+            st.info(f"👤 Eingeloggt als **{st.session_state['user']['username']}**")
+        with col2:
             if st.button("Logout"):
                 st.session_state.pop("user")
                 st.rerun()
-
+    
     if "user" not in st.session_state:
         show_login_register()
         return
 
     user = st.session_state["user"]
-    st.caption(f"Eingeloggt als **{user['username']}**")
 
-    show_search_and_results(user_id=user["id"])
-    st.divider()
-    show_saved_products(user_id=user["id"])
+    # Tabs für bessere Übersicht
+    tab1, tab2 = st.tabs(["🔍 Suchen", "📦 Meine Produkte"])
+    
+    with tab1:
+        show_search_and_results(user_id=user["id"])
+    
+    with tab2:
+        show_saved_products(user_id=user["id"])
 
 
 if __name__ == "__main__":

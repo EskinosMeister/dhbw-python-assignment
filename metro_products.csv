@@ -1,0 +1,11 @@
+source,query,title,price,unit_price,url,timestamp
+METRO,Milch,Frische Vollmilch 3.5% 1L,1.09,1.09 €/l,https://www.metro.de/artikel/milch-35-1l,2025-10-22T21:30:00
+METRO,Milch,H-Milch 1.5% 1L,0.99,0.99 €/l,https://www.metro.de/artikel/h-milch-15-1l,2025-10-22T21:31:00
+METRO,Milch,Weidemilch 3.8% 1L,1.29,1.29 €/l,https://www.metro.de/artikel/weidemilch-38-1l,2025-10-22T21:31:30
+METRO,Butter,Deutsche Markenbutter 250g,2.19,8.76 €/kg,https://www.metro.de/artikel/markenbutter-250g,2025-10-22T21:32:00
+METRO,Butter,Irische Butter 250g,2.49,9.96 €/kg,https://www.metro.de/artikel/irische-butter-250g,2025-10-22T21:32:30
+METRO,Eier,Eier Bodenhaltung M 10er,2.69,0.27 €/Stk,https://www.metro.de/artikel/eier-m-10er,2025-10-22T21:33:00
+METRO,Eier,Eier Freiland L 10er,3.49,0.35 €/Stk,https://www.metro.de/artikel/eier-l-10er,2025-10-22T21:33:30
+METRO,Wasser,Naturwasser Still 1.5L,0.35,0.23 €/l,https://www.metro.de/artikel/wasser-still-15l,2025-10-22T21:34:00
+METRO,Wasser,Medium Mineralwasser 1.5L,0.39,0.26 €/l,https://www.metro.de/artikel/wasser-medium-15l,2025-10-22T21:34:30
+METRO,Brot,Roggenmischbrot 750g,1.99,2.65 €/kg,https://www.metro.de/artikel/roggenmischbrot-750g,2025-10-22T21:35:00

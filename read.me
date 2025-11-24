@@ -1,0 +1,70 @@
+title Grocery Product Comparison Platform Data Model
+
+// define tables
+users [icon: user, color: yellow]{
+  id string pk
+  username string
+  email string
+  password_hash string
+  created_at timestamp
+}
+
+supermarkets [icon: shopping-cart, color: green]{
+  id string pk
+  name string
+  location string
+  website string
+}
+
+products [icon: package, color: blue]{
+  id string pk
+  name string
+  brand string
+  category string
+  created_by_user_id string
+  is_user_created boolean
+  created_at timestamp
+}
+
+supermarket_products [icon: tag, color: orange]{
+  id string pk
+  supermarket_id string
+  product_id string
+  price decimal
+  available boolean
+  last_updated timestamp
+}
+
+orders [icon: file-text, color: purple]{
+  id string pk
+  user_id string
+  order_date timestamp
+  supermarket_id string
+  total_amount decimal
+}
+
+order_items [icon: shopping-bag, color: pink]{
+  id string pk
+  order_id string
+  product_id string
+  quantity integer
+  price_at_purchase decimal
+}
+
+saved_products [icon: star, color: gold]{
+  id string pk
+  user_id string
+  product_id string
+  saved_at timestamp
+}
+
+// define relationships
+products.created_by_user_id > users.id
+supermarket_products.supermarket_id > supermarkets.id
+supermarket_products.product_id > products.id
+orders.user_id > users.id
+orders.supermarket_id > supermarkets.id
+order_items.order_id > orders.id
+order_items.product_id > products.id
+saved_products.user_id > users.id
+saved_products.product_id > products.id

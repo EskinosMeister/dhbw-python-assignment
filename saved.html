@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+
+{% block title %}Merkliste – Grocery Vergleich{% endblock %}
+
+{% block content %}
+<div class="card">
+  <h1>Merkliste</h1>
+  <p class="subtitle">
+    Hier siehst du alle Produkte, die du dir gemerkt hast.
+  </p>
+
+  {% if items and items|length > 0 %}
+    <table>
+      <tr>
+        <th>Produkt</th>
+        <th>Marke</th>
+        <th>Kategorie</th>
+        <th>Preis (günstigster)</th>
+        <th>Gespeichert am</th>
+      </tr>
+      {% for row in items %}
+      <tr>
+        <td>{{ row["name"] }}</td>
+        <td>{{ row["brand"] or "–" }}</td>
+        <td>{{ row["category"] or "–" }}</td>
+        <td class="price">
+          {% if row["min_price"] is not none %}
+            {{ "%.2f"|format(row["min_price"]) }} €
+          {% else %}
+            –
+          {% endif %}
+        </td>
+        <td>{{ row["saved_at"][:10] }}</td>
+      </tr>
+      {% endfor %}
+    </table>
+  {% else %}
+    <p class="empty-state">
+      Du hast noch keine Produkte gespeichert.<br>
+      Gehe zur <a href="{{ url_for('search') }}">Suche</a> und füge Produkte zur Merkliste hinzu.
+    </p>
+  {% endif %}
+</div>
+{% endblock %}

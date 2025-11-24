@@ -1,8 +1,10 @@
 # app.py
+
 from datetime import datetime, timedelta
-from flask import Flask, render_template, request, redirect, url_for, flash
+import os
 import sqlite3
 
+from flask import Flask, render_template, request, redirect, url_for
 
 DB_PATH = "grocery.db"
 
@@ -16,9 +18,7 @@ def get_connection():
 
 
 app = Flask(__name__)
-app.secret_key = "dev-secret"  # für Flash-Messages, in Produktion ändern!
-
-# Für Demo: fester User
+app.secret_key = "dev-secret"
 CURRENT_USER_ID = "u1"
 
 
@@ -52,7 +52,6 @@ def search():
         """
         params = (f"%{query}%", f"%{query}%")
     else:
-        # Zeige einfach alle Produkte mit Preisen, wenn keine Suche eingegeben wurde
         sql = """
         SELECT
             p.id as product_id,
@@ -71,8 +70,6 @@ def search():
 
     products = cur.execute(sql, params).fetchall()
     conn.close()
-
-    print(f"DEBUG: query='{query}', rows={len(products)}")  # zur Kontrolle im Terminal
 
     return render_template("search.html", query=query, products=products)
 
@@ -97,9 +94,7 @@ def save_product(product_id):
     conn.commit()
     conn.close()
 
-    # zurück zur Seite, von der der User kam, oder zur Merkliste
     return redirect(request.referrer or url_for("saved"))
-
 
 
 @app.route("/saved")
@@ -124,69 +119,80 @@ def saved():
     return render_template("saved.html", items=items)
 
 
-
 @app.route("/kpis")
 def kpis():
-    """KPIs:
-    - Gesamt-Ausgaben im letzten Monat
-    - Ausgaben nach Supermarkt im letzten Monat
-    """
+    """KPIs für den aktuellen User: Ausgaben in wählbarem Zeitraum (7/30/90 Tage)."""
     conn = get_connection()
-    now = datetime.utcnow()
-    since = now - timedelta(days=30)
+    cur = conn.cursor()
 
-    # Gesamt-Ausgaben (Orders)
-    sql_total = """
-    SELECT COALESCE(SUM(total_amount), 0) as total
-    FROM orders
-    WHERE user_id = ?
-      AND order_date >= ?
-    """
-    total = conn.execute(sql_total, (CURRENT_USER_ID, since.isoformat())).fetchone()["total"]
+    days_param = request.args.get("days", "30")
+    try:
+        days = int(days_param)
+    except ValueError:
+        days = 30
 
-    # Ausgaben nach Supermarkt
-    sql_by_market = """
-    SELECT s.name, COALESCE(SUM(o.total_amount), 0) as sum_amount
-    FROM orders o
-    JOIN supermarkets s ON s.id = o.supermarket_id
-    WHERE o.user_id = ?
-      AND o.order_date >= ?
-    GROUP BY s.id
-    ORDER BY sum_amount DESC
-    """
-    by_market = conn.execute(sql_by_market, (CURRENT_USER_ID, since.isoformat())).fetchall()
+    if days not in (7, 30, 90):
+        days = 30
+
+    now = datetime.now()
+    since = now - timedelta(days=days)
+
+    total_row = cur.execute(
+        """
+        SELECT COALESCE(SUM(total_amount), 0) AS total
+        FROM orders
+        WHERE user_id = ?
+          AND order_date >= ?
+        """,
+        (CURRENT_USER_ID, since.isoformat()),
+    ).fetchone()
+    total_amount = total_row["total"]
+
+    by_market = cur.execute(
+        """
+        SELECT
+            s.name AS supermarket_name,
+            COUNT(o.id) AS order_count,
+            SUM(o.total_amount) AS sum_amount
+        FROM orders o
+        JOIN supermarkets s ON s.id = o.supermarket_id
+        WHERE o.user_id = ?
+          AND o.order_date >= ?
+        GROUP BY s.id
+        ORDER BY sum_amount DESC
+        """,
+        (CURRENT_USER_ID, since.isoformat()),
+    ).fetchall()
+
+    by_category = cur.execute(
+        """
+        SELECT
+            p.category AS category,
+            SUM(oi.quantity * oi.price_at_purchase) AS sum_amount
+        FROM order_items oi
+        JOIN orders o ON o.id = oi.order_id
+        JOIN products p ON p.id = oi.product_id
+        WHERE o.user_id = ?
+          AND o.order_date >= ?
+        GROUP BY p.category
+        ORDER BY sum_amount DESC
+        """,
+        (CURRENT_USER_ID, since.isoformat()),
+    ).fetchall()
 
     conn.close()
 
-    return render_template("kpis.html", total=total, by_market=by_market, since=since.date(), now=now.date())
-
-
-@app.route("/cheapest/<product_id>")
-def cheapest(product_id):
-    """Zeigt für ein Produkt: in welchem Markt ist es am günstigsten?"""
-    conn = get_connection()
-    sql = """
-    SELECT
-        p.name,
-        s.name AS supermarket_name,
-        sp.price
-    FROM supermarket_products sp
-    JOIN products p ON p.id = sp.product_id
-    JOIN supermarkets s ON s.id = sp.supermarket_id
-    WHERE p.id = ?
-    ORDER BY sp.price ASC
-    """
-    cur = conn.execute(sql, (product_id,))
-    rows = cur.fetchall()
-    conn.close()
-    if not rows:
-        flash("Keine Preisinfos zu diesem Produkt.")
-        return redirect(url_for("search"))
-
-    product_name = rows[0]["name"]
-    cheapest_row = rows[0]
-    return render_template("cheapest.html", product_name=product_name, rows=rows, cheapest=cheapest_row)
+    return render_template(
+        "kpis.html",
+        total_last_30=total_amount,
+        by_market=by_market,
+        by_category=by_category,
+        since=since.date(),
+        until=now.date(),
+        days=days,
+    )
 
 
 if __name__ == "__main__":
+    print("Starte Flask app, app.py:", os.path.abspath(__file__))
     app.run(debug=True)

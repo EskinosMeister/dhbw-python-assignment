@@ -1,0 +1,125 @@
+{% extends "base.html" %}
+
+{% block title %}KPIs – Grocery Vergleich{% endblock %}
+
+{% block content %}
+<div class="card">
+  <h1>Deine KPIs</h1>
+  <p class="subtitle">
+    Zeitraum: {{ since }} bis {{ until }} (letzte {{ days }} Tage)
+  </p>
+
+  <div style="margin-bottom: 16px; font-size: 14px;">
+    Zeitraum:
+    <a href="{{ url_for('kpis', days=7) }}"
+       style="margin-left: 6px; padding: 4px 10px; border-radius: 999px;
+              text-decoration: none; border: 1px solid #e5e7eb;
+              {% if days == 7 %}background:#2563eb;color:#fff;border-color:#2563eb;{% else %}color:#4b5563;{% endif %}">
+      7 Tage
+    </a>
+    <a href="{{ url_for('kpis', days=30) }}"
+       style="margin-left: 4px; padding: 4px 10px; border-radius: 999px;
+              text-decoration: none; border: 1px solid #e5e7eb;
+              {% if days == 30 %}background:#2563eb;color:#fff;border-color:#2563eb;{% else %}color:#4b5563;{% endif %}">
+      30 Tage
+    </a>
+    <a href="{{ url_for('kpis', days=90) }}"
+       style="margin-left: 4px; padding: 4px 10px; border-radius: 999px;
+              text-decoration: none; border: 1px solid #e5e7eb;
+              {% if days == 90 %}background:#2563eb;color:#fff;border-color:#2563eb;{% else %}color:#4b5563;{% endif %}">
+      90 Tage
+    </a>
+  </div>
+
+  <h2 style="margin-top: 0;">Ausgaben</h2>
+  <p style="font-size: 18px; font-weight: 600; margin: 4px 0 16px;">
+    Insgesamt: {{ "%.2f"|format(total_last_30) }} €
+  </p>
+
+  {% if by_market %}
+    <h3>Ausgaben nach Supermarkt (Diagramm)</h3>
+    <canvas id="marketChart" style="max-width: 100%; height: 260px;"></canvas>
+  {% endif %}
+
+  <h3 style="margin-top: 24px;">Ausgaben nach Supermarkt (Tabelle)</h3>
+  {% if by_market %}
+    <table>
+      <tr>
+        <th>Supermarkt</th>
+        <th>Anzahl Einkäufe</th>
+        <th>Summe</th>
+      </tr>
+      {% for row in by_market %}
+      <tr>
+        <td>{{ row["supermarket_name"] }}</td>
+        <td>{{ row["order_count"] }}</td>
+        <td class="price">{{ "%.2f"|format(row["sum_amount"]) }} €</td>
+      </tr>
+      {% endfor %}
+    </table>
+  {% else %}
+    <p class="empty-state">Keine Einkäufe im Zeitraum.</p>
+  {% endif %}
+
+  <h3 style="margin-top: 24px;">Ausgaben nach Kategorie</h3>
+  {% if by_category %}
+    <table>
+      <tr>
+        <th>Kategorie</th>
+        <th>Summe</th>
+      </tr>
+      {% for row in by_category %}
+      <tr>
+        <td>{{ row["category"] or "Unbekannt" }}</td>
+        <td class="price">{{ "%.2f"|format(row["sum_amount"]) }} €</td>
+      </tr>
+      {% endfor %}
+    </table>
+  {% else %}
+    <p class="empty-state">Keine Kategoriedaten im Zeitraum.</p>
+  {% endif %}
+</div>
+
+{% if by_market %}
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script>
+    const marketLabels = {{ by_market | map(attribute='supermarket_name') | list | tojson }};
+    const marketValues = {{ by_market | map(attribute='sum_amount') | list | tojson }};
+
+    const ctx = document.getElementById('marketChart').getContext('2d');
+
+    const marketChart = new Chart(ctx, {
+      type: 'bar',
+      data: {
+        labels: marketLabels,
+        datasets: [{
+          label: 'Ausgaben (letzte {{ days }} Tage)',
+          data: marketValues,
+          borderWidth: 1
+        }]
+      },
+      options: {
+        responsive: true,
+        scales: {
+          y: {
+            beginAtZero: true,
+            ticks: {
+              callback: (value) => (value.toFixed ? value.toFixed(0) : value) + ' €'
+            }
+          }
+        },
+        plugins: {
+          legend: {
+            display: false
+          },
+          tooltip: {
+            callbacks: {
+              label: (ctx) => ctx.parsed.y.toFixed(2) + ' €'
+            }
+          }
+        }
+      }
+    });
+  </script>
+{% endif %}
+{% endblock %}

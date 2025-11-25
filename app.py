@@ -124,7 +124,7 @@ def saved():
     items = conn.execute(sql, (CURRENT_USER_ID,)).fetchall()
     conn.close()
 
-    return render_template("saved.html", items=items)
+    return render_template("template/saved.html", items=items)
 
 
 
@@ -147,7 +147,7 @@ def add_product():
         if not name:
             # Minimal: bei fehlendem Namen einfach wieder Formular zeigen
             conn.close()
-            return render_template("add_product.html", supermarkets=supermarkets, error="Name darf nicht leer sein.")
+            return render_template("template/add_product.html", supermarkets=supermarkets, error="Name darf nicht leer sein.")
 
         now = datetime.now().isoformat()
         product_id = f"up_{int(datetime.now().timestamp() * 1000)}"
@@ -190,7 +190,7 @@ def add_product():
 
     # GET: Formular anzeigen
     conn.close()
-    return render_template("add_product.html", supermarkets=supermarkets, error=None)
+    return render_template("template/add_product.html", supermarkets=supermarkets, error=None)
 
 
 @app.route("/kpis")
@@ -257,7 +257,7 @@ def kpis():
     conn.close()
 
     return render_template(
-        "kpis.html",
+        "template/kpis.html",
         total_last_30=total_amount,
         by_market=by_market,
         by_category=by_category,
@@ -347,7 +347,7 @@ def savings():
     potential_saving = comparable_actual_total - alt_total  # > 0 = Ref-Supermarkt wäre günstiger
 
     return render_template(
-        "savings.html",
+        "template/savings.html",
         supermarkets=supermarkets,
         selected_market_id=selected_market_id,
         days=days,
@@ -388,7 +388,7 @@ def add_order():
             except ValueError:
                 error = "Datum muss im Format JJJJ-MM-TT sein."
                 return render_template(
-                    "add_order.html",
+                    "template/add_order.html",
                     supermarkets=supermarkets,
                     products=products,
                     error=error,
@@ -435,7 +435,7 @@ def add_order():
         if not supermarket_id or not items:
             error = "Bitte Supermarkt wählen und mindestens eine gültige Position mit Preis angeben."
             return render_template(
-                "add_order.html",
+                "template/add_order.html",
                 supermarkets=supermarkets,
                 products=products,
                 error=error,
@@ -474,7 +474,7 @@ def add_order():
     # GET: Formular anzeigen
     conn.close()
     return render_template(
-        "add_order.html",
+        "template/add_order.html",
         supermarkets=supermarkets,
         products=products,
         error=error,

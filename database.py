@@ -53,6 +53,7 @@ def seed_data():
     load_csv("order_items", "data/order_items.csv")
 
 
+
 if __name__ == "__main__":
     seed_data()
     print("DB initialisiert und mit Beispieldaten befüllt.")

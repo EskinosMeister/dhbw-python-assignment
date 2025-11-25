@@ -1,0 +1,57 @@
+{% extends "base.html" %}
+
+{% block title %}Neues Produkt – Grocery Vergleich{% endblock %}
+
+{% block content %}
+<div class="card">
+  <h1>Neues Produkt anlegen</h1>
+  <p class="subtitle">
+    Lege ein eigenes Produkt an und hinterlege Preise für deine Supermärkte. 
+    Danach erscheint es in der Suche und im Vergleich.
+  </p>
+
+  {% if error %}
+    <p style="color:#b91c1c; font-size:14px; margin-bottom:12px;">
+      {{ error }}
+    </p>
+  {% endif %}
+
+  <form method="post">
+    <div style="display:flex; flex-direction:column; gap:10px; margin-bottom:16px;">
+      <input type="text" name="name" placeholder="Produktname *" required
+             style="padding:8px 10px; border-radius:8px; border:1px solid #e5e7eb;">
+      <input type="text" name="brand" placeholder="Marke (optional)"
+             style="padding:8px 10px; border-radius:8px; border:1px solid #e5e7eb;">
+      <input type="text" name="category" placeholder="Kategorie (z. B. Milch, Nudeln)"
+             style="padding:8px 10px; border-radius:8px; border:1px solid #e5e7eb;">
+    </div>
+
+    <h3>Preise je Supermarkt</h3>
+    <p class="subtitle">
+      Trage einen Preis pro Supermarkt ein, den du vergleichen willst. Leere Felder werden ignoriert.
+    </p>
+
+    <table>
+      <tr>
+        <th>Supermarkt</th>
+        <th>Preis</th>
+      </tr>
+      {% for s in supermarkets %}
+      <tr>
+        <td>{{ s["name"] }}</td>
+        <td>
+          <input type="text"
+                 name="price_{{ s['id'] }}"
+                 placeholder="z. B. 1,29"
+                 style="width:100px; padding:4px 6px; border-radius:6px; border:1px solid #e5e7eb;">
+        </td>
+      </tr>
+      {% endfor %}
+    </table>
+
+    <div style="margin-top:16px;">
+      <button type="submit" class="btn-primary">Produkt speichern</button>
+    </div>
+  </form>
+</div>
+{% endblock %}

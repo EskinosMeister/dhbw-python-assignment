@@ -1,9 +1,5 @@
 # reset_db.py
-import os
-
-from db_init import get_connection
-
-DB_PATH = "grocery.db" # unsure whether to delete this or not
+from my_helpers import get_connection, DB_PATH
 
 destroy_schema = """
 PRAGMA foreign_keys = ON;
@@ -19,8 +15,8 @@ DROP TABLE IF EXISTS users;
 
 
 def main():
-    if os.path.exists(DB_PATH): # seems possibly redundant, DB_PATH is defined in this script
-        os.remove(DB_PATH)
+    if DB_PATH.exists():
+        DB_PATH.unlink()
         print(f"Bestehende {DB_PATH} gelöscht.")
 
     conn = get_connection()

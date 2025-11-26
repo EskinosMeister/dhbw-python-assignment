@@ -1,0 +1,96 @@
+{#DATEI: add_order.html
+    ZWECK: Template zur Erfassung einer neuen Bestellung durch den User.
+    BASIS: Erweitert das Grundlayout 'base.html'.
+    STRUKTUR: Beinhaltet ein Formular zur Aufnahme von Bestelldaten (Datum, Markt) und Produktpositionen (bis zu 3).
+#}
+
+{% extends "base.html" %}
+
+{#Block für den spezifischen HTML-Titel der Seite #}
+{% block title %}Neue Bestellung – Grocery Vergleich{% endblock %}
+
+{# Hauptinhalt der Seite (Content Block) #}
+{% block content %}
+<div class="card">
+  <h1>Neue Bestellung erfassen</h1>
+  <p class="subtitle">
+    Lege einen Einkauf mit Datum, Supermarkt und mehreren Produkten an. 
+    Die Preise werden aus den aktuellen Supermarkt-Preisen übernommen.
+  </p>
+
+  {#Jinja2-Bedingung: Zeigt eine Fehlermeldung an, wenn die Variable 'error' von der Flask-Route gesetzt wurde#}
+  {% if error %}
+    <p style="color:#b91c1c; font-size:14px; margin-bottom:12px;">
+      {{ error }}
+    </p>
+  {% endif %}
+
+  <form method="post">
+    
+    {#Bereich für Datums- und Supermarkt-Auswahl #}
+    <div style="display:flex; gap:12px; margin-bottom:16px; flex-wrap:wrap;">
+      
+      {#Eingabefeld für das optionale Bestelldatum#}
+      <div>
+        <label style="font-size:13px; color:#4b5563;">Datum</label><br>
+        <input type="date" name="order_date"
+               style="padding:6px 8px; border-radius:8px; border:1px solid #e5e7eb;">
+      </div>
+
+      {#Auswahlfeld für den Supermarkt (Dropdown) - Pflichtfeld#}
+      <div>
+        <label style="font-size:13px; color:#4b5563;">Supermarkt *</label><br>
+        <select name="supermarket_id"
+                style="padding:6px 8px; border-radius:8px; border:1px solid #e5e7eb; min-width:160px;">
+          <option value="">Bitte wählen …</option>
+
+          {#Jinja2-Schleife: Iteriert über die Liste der verfügbaren Supermärkte (übergeben von Flask)#}
+          {% for s in supermarkets %}
+          <option value="{{ s['id'] }}">{{ s["name"] }}</option>
+          {% endfor %}
+        </select>
+      </div>
+    </div>
+
+    <h3>Positionen</h3>
+    <p class="subtitle">
+      Wähle bis zu 3 Produkte und Mengen. Nur Positionen mit vorhandenem Preis im gewählten Supermarkt werden berücksichtigt.
+    </p>
+
+    <table>
+      <tr>
+        <th>Produkt</th>
+        <th>Menge</th>
+      </tr>
+
+      {#Jinja2-Schleife: Erzeugt 3 statische Zeilen für die Eingabe der Bestellpositionen (i=1, 2, 3)#}
+      {% for i in range(1, 4) %}
+      <tr>
+        <td>
+          {#Dropdown zur Auswahl des Produkts (Benennung: product_1, product_2, etc.)#}
+          <select name="product_{{ i }}"
+                  style="width:100%; padding:4px 6px; border-radius:6px; border:1px solid #e5e7eb;">
+            <option value="">– kein Produkt –</option>
+            {#Jinja2-Schleife: Iteriert über alle verfügbaren Produkte aus der Datenbank}
+            {% for p in products %}
+            <option value="{{ p['id'] }}">
+              {{ p["name"] }}{% if p["brand"] %} ({{ p["brand"] }}){% endif %}
+            </option>
+            {% endfor %}
+          </select>
+        </td>
+        <td>
+          {#Eingabefeld für die Menge (Benennung: qty_1, qty_2, etc.)#}
+          <input type="number" name="qty_{{ i }}" min="1"
+                 style="width:80px; padding:4px 6px; border-radius:6px; border:1px solid #e5e7eb;">
+        </td>
+      </tr>
+      {% endfor %}
+    </table>
+
+    <div style="margin-top:16px;">
+      <button type="submit" class="btn-primary">Bestellung speichern</button>
+    </div>
+  </form>
+</div>
+{% endblock %}

@@ -1,0 +1,63 @@
+{#DATEI: saved.html
+    ZWECK: Template zur Anzeige der Merkliste (gespeicherte Produkte) des aktuellen Users.
+    BASIS: Erweitert das Grundlayout 'base.html'.
+    FUNKTIONALITÄT:
+        - Listet alle gemerkten Produkte des Users auf.
+        - Zeigt den momentan günstigsten Preis des Produkts an (aus der Datenbank).
+        - Stellt eine Fallback-Meldung dar, wenn die Liste leer ist.#}
+  
+{% extends "base.html" %}
+
+{#Block für den spezifischen HTML-Titel der Seite#}
+{% block title %}Merkliste – Grocery Vergleich{% endblock %}
+
+{#Hauptinhalt der Seite (Content Block)#}
+{% block content %}
+<div class="card">
+  <h1>Merkliste</h1>
+  <p class="subtitle">
+    Hier siehst du alle Produkte, die du dir gemerkt hast.
+  </p>
+
+  {#Jinja2-Bedingung: Prüft, ob Produkte in der Liste 'items' vorhanden sind (Liste nicht leer)#}
+  {% if items and items|length > 0 %}
+    <table>
+      <tr>
+        <th>Produkt</th>
+        <th>Marke</th>
+        <th>Kategorie</th>
+        <th>Preis (günstigster)</th>
+        <th>Gespeichert am</th>
+      </tr>
+      
+      {#Jinja2-Schleife: Iteriert über die Liste der gespeicherten Produkte ('items')#}
+      {% for row in items %}
+      <tr>
+        <td>{{ row["name"] }}</td>
+        <td>{{ row["brand"] or "–" }}</td>
+        <td>{{ row["category"] or "–" }}</td>
+        <td class="price">
+          
+          {#Jinja2-Bedingung: Prüft, ob ein Minimalpreis gefunden wurde#}
+          {% if row["min_price"] is not none %}
+          {#Preis-Ausgabe, formatiert auf zwei Nachkommastellen#}
+            {{ "%.2f"|format(row["min_price"]) }} €
+          {% else %}
+            –
+          {% endif %}
+        </td>
+        {#Anzeige des Speicherdatums (nur die ersten 10 Zeichen = YYYY-MM-DD)#}
+        <td>{{ row["saved_at"][:10] }}</td>
+      </tr>
+      {% endfor %}
+    </table>
+    
+  {#Jinja2-Else-Block: Wird angezeigt, wenn keine Produkte in der Merkliste sind#}
+  {% else %}
+    <p class="empty-state">
+      Du hast noch keine Produkte gespeichert.<br>
+      Gehe zur <a href="{{ url_for('search') }}">Suche</a> und füge Produkte zur Merkliste hinzu.
+    </p>
+  {% endif %}
+</div>
+{% endblock %}

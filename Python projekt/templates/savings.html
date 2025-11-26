@@ -1,0 +1,144 @@
+{#DATEI: savings.html
+    ZWECK: Template zur Berechnung und Anzeige des potentiellen Einsparpotenzials 
+           im Vergleich zu einem Referenz-Supermarkt.
+    BASIS: Erweitert das Grundlayout 'base.html'.
+    FUNKTIONALITÄT:
+        - Erlaubt die Auswahl des Vergleichs-Zeitraums und des Referenz-Supermarkts.
+        - Fasst die tatsächlichen vs. hypothetischen Ausgaben zusammen.
+        - Zeigt eine detaillierte Tabelle der Differenzen pro Bestellposition an.
+#}
+{% extends "base.html" %}
+
+{#Block für den spezifischen HTML-Titel der Seite#}
+{% block title %}Ersparnis – Grocery Vergleich{% endblock %}
+
+{#Hauptinhalt der Seite (Content Block)#}
+{% block content %}
+<div class="card">
+  <h1>Potentielle Ersparnis</h1>
+  <p class="subtitle">
+    Wie viel hättest du im Zeitraum gespart oder mehr bezahlt, wenn du alle Einkäufe in einem
+    bestimmten Supermarkt gemacht hättest?
+  </p>
+
+  <form method="get" style="margin-bottom: 16px; font-size: 14px;">
+    <label>
+      Zeitraum:
+      <select name="days" onchange="this.form.submit()" style="margin-left:4px; padding:4px 6px; border-radius:6px; border:1px solid #e5e7eb;">
+        {#Jinja2-Bedingung: Setzt 'selected', wenn der Zeitraum aktiv ist#}
+        <option value="7"  {% if days == 7 %}selected{% endif %}>7 Tage</option>
+        <option value="30" {% if days == 30 %}selected{% endif %}>30 Tage</option>
+        <option value="90" {% if days == 90 %}selected{% endif %}>90 Tage</option>
+      </select>
+    </label>
+
+    <label style="margin-left:16px;">
+      Referenz-Supermarkt:
+      <select name="market_id" onchange="this.form.submit()" style="margin-left:4px; padding:4px 6px; border-radius:6px; border:1px solid #e5e7eb;">
+        {#Jinja2-Schleife: Iteriert über die Liste der verfügbaren Supermärkte#}
+        {% for s in supermarkets %}
+        {#Jinja2-Bedingung: Setzt 'selected', wenn dieser Markt der aktive Referenzmarkt ist#}
+        <option value="{{ s['id'] }}" {% if s['id'] == selected_market_id %}selected{% endif %}>
+          {{ s["name"] }}
+        </option>
+        {% endfor %}
+      </select>
+    </label>
+  </form>
+
+  <p class="subtitle">
+    Zeitraum: {{ since }} bis {{ until }} (letzte {{ days }} Tage)
+  </p>
+
+  <h2 style="margin-top: 0;">Zusammenfassung</h2>
+  <ul style="font-size:14px; padding-left:18px;">
+    <li>
+      Tatsächliche Ausgaben (alle Einkäufe): 
+      <strong>{{ "%.2f"|format(actual_total) }} €</strong>
+    </li>
+    <li>
+      Vergleichbare Ausgaben (nur Produkte, die es auch im Referenz-Supermarkt gibt): 
+      <strong>{{ "%.2f"|format(comparable_actual_total) }} €</strong>
+    </li>
+    <li>
+      Hypothetische Ausgaben im Referenz-Supermarkt:
+      <strong>{{ "%.2f"|format(alt_total) }} €</strong>
+    </li>
+    <li>
+      Produkte ohne Preis im Referenz-Supermarkt (nicht vergleichbar):
+      <strong>{{ "%.2f"|format(skipped_total) }} €</strong>
+    </li>
+  </ul>
+
+  <p style="font-size:16px; font-weight:600; margin-top:8px;">
+    {#Jinja2-Bedingung: Prüft, ob die Ersparnis positiv (> 0), negativ (< 0) oder neutral (= 0) ist#}
+    {% if potential_saving > 0 %}
+      Potentielle Ersparnis: {{ "%.2f"|format(potential_saving) }} € 
+      (Referenz-Supermarkt wäre günstiger gewesen)
+    {% elif potential_saving < 0 %}
+      Mehrkosten: {{ "%.2f"|format(potential_saving | abs) }} € 
+      (du warst günstiger unterwegs als der Referenz-Supermarkt)
+    {% else %}
+      Kein Unterschied messbar im vergleichbaren Warenkorb.
+    {% endif %}
+  </p>
+
+  <h3 style="margin-top:24px;">Details pro Position</h3>
+  {#Jinja2-Bedingung: Zeigt die Detailtabelle nur an, wenn Bestelldaten ('rows') im Zeitraum vorhanden sind#}
+  {% if rows %}
+    <table>
+      <tr>
+        <th>Datum</th>
+        <th>Tatsächlicher Markt</th>
+        <th>Produkt</th>
+        <th>Menge</th>
+        <th>Ist-Preis</th>
+        <th>Ref-Preis</th>
+        <th>Ist-Gesamt</th>
+        <th>Ref-Gesamt</th>
+        <th>Diff</th>
+      </tr>
+      {% for r in rows %}
+      {#Jinja2-Set-Anweisung: Berechnet die Gesamtbeträge pro Zeile#}
+      {% set actual_line = r["quantity"] * r["price_at_purchase"] %}
+      {% set ref_line = r["quantity"] * (r["ref_price"] or 0) %}
+      <tr>
+        <td>{{ r["order_date"][:10] }}</td>
+        <td>{{ r["actual_supermarket_name"] }}</td>
+        <td>{{ r["product_name"] }}</td>
+        <td>{{ r["quantity"] }}</td>
+        <td class="price">{{ "%.2f"|format(r["price_at_purchase"]) }} €</td>
+        <td class="price">
+          {% if r["ref_price"] is not none %}
+            {{ "%.2f"|format(r["ref_price"]) }} €
+          {% else %}
+            –
+          {% endif %}
+        </td>
+        <td class="price">{{ "%.2f"|format(actual_line) }} €</td>
+        <td class="price">
+          {% if r["ref_price"] is not none %}
+            {{ "%.2f"|format(ref_line) }} €
+          {% else %}
+            –
+          {% endif %}
+        </td>
+        <td class="price">
+          {#Jinja2-Bedingung: Zeigt die Differenz nur an, wenn der Preis verfügbar war #}
+          {% if r["ref_price"] is not none %}
+          {% if r["ref_price"] is not none %}
+            {{ "%.2f"|format(actual_line - ref_line) }} €
+          {% else %}
+            –
+          {% endif %}
+        </td>
+      </tr>
+      {% endfor %}
+    </table>
+  {% else %}
+    <p class="empty-state">
+      Keine Bestelldaten im Zeitraum vorhanden.
+    </p>
+  {% endif %}
+</div>
+{% endblock %}

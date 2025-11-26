@@ -2,20 +2,12 @@
 
 from datetime import datetime, timedelta
 import os
-import sqlite3
 
 from flask import Flask, render_template, request, redirect, url_for
 
-DB_PATH = "grocery.db"
+from database.my_helpers import get_connection, get_cursor
 
-
-def get_connection():
-    """Stellt eine Verbindung zur SQLite-Datenbank her."""
-    conn = sqlite3.connect(DB_PATH)
-    conn.row_factory = sqlite3.Row
-    conn.execute("PRAGMA foreign_keys = ON;")
-    return conn
-
+#DB_PATH = "grocery.db"
 
 app = Flask(__name__)
 app.secret_key = "dev-secret"
@@ -29,11 +21,13 @@ def index():
 
 @app.route("/search", methods=["GET", "POST"])
 def search():
+    # I don't why we would get either GET or POST access methods
     query = request.form.get("q", "") if request.method == "POST" else request.args.get("q", "")
 
     conn = get_connection()
-    cur = conn.cursor()
+    cur = get_cursor()
 
+    # I don't understand how we could have no query at all
     if query:
         sql = """
         SELECT
@@ -78,7 +72,7 @@ def search():
 def save_product(product_id):
     """Produkt für den aktuellen User auf die Merkliste setzen."""
     conn = get_connection()
-    cur = conn.cursor()
+    cur = get_cursor()
 
     saved_id = f"svp_{int(datetime.now().timestamp() * 1000)}"
     now = datetime.now().isoformat()

@@ -2,23 +2,16 @@
 
 from datetime import datetime, timedelta
 import os
-import sqlite3
 
 from flask import Flask, render_template, request, redirect, url_for
 
-DB_PATH = "grocery.db"
+from database.my_helpers import get_connection
 
-
-def get_connection():
-    """Stellt eine Verbindung zur SQLite-Datenbank her."""
-    conn = sqlite3.connect(DB_PATH)
-    conn.row_factory = sqlite3.Row
-    conn.execute("PRAGMA foreign_keys = ON;")
-    return conn
-
+#DB_PATH = "grocery.db"
 
 app = Flask(__name__)
 app.secret_key = "dev-secret"
+# this is hardcoded for one user... Should work for multiple users. This requires session management.
 CURRENT_USER_ID = "u1"
 
 
@@ -29,11 +22,13 @@ def index():
 
 @app.route("/search", methods=["GET", "POST"])
 def search():
+    # I don't why we would get either GET or POST access methods
     query = request.form.get("q", "") if request.method == "POST" else request.args.get("q", "")
 
     conn = get_connection()
     cur = conn.cursor()
 
+    # I don't understand how we could have no query at all
     if query:
         sql = """
         SELECT
@@ -71,7 +66,7 @@ def search():
     products = cur.execute(sql, params).fetchall()
     conn.close()
 
-    return render_template("template/search.html", query=query, products=products)
+    return render_template("search.html", query=query, products=products)
 
 
 @app.route("/save_product/<product_id>")
@@ -124,7 +119,7 @@ def saved():
     items = conn.execute(sql, (CURRENT_USER_ID,)).fetchall()
     conn.close()
 
-    return render_template("template/saved.html", items=items)
+    return render_template("saved.html", items=items)
 
 
 
@@ -147,7 +142,7 @@ def add_product():
         if not name:
             # Minimal: bei fehlendem Namen einfach wieder Formular zeigen
             conn.close()
-            return render_template("template/add_product.html", supermarkets=supermarkets, error="Name darf nicht leer sein.")
+            return render_template("add_product.html", supermarkets=supermarkets, error="Name darf nicht leer sein.")
 
         now = datetime.now().isoformat()
         product_id = f"up_{int(datetime.now().timestamp() * 1000)}"
@@ -190,7 +185,7 @@ def add_product():
 
     # GET: Formular anzeigen
     conn.close()
-    return render_template("template/add_product.html", supermarkets=supermarkets, error=None)
+    return render_template("add_product.html", supermarkets=supermarkets, error=None)
 
 
 @app.route("/kpis")
@@ -257,7 +252,7 @@ def kpis():
     conn.close()
 
     return render_template(
-        "template/kpis.html",
+        "kpis.html",
         total_last_30=total_amount,
         by_market=by_market,
         by_category=by_category,
@@ -347,7 +342,7 @@ def savings():
     potential_saving = comparable_actual_total - alt_total  # > 0 = Ref-Supermarkt wäre günstiger
 
     return render_template(
-        "template/savings.html",
+        "savings.html",
         supermarkets=supermarkets,
         selected_market_id=selected_market_id,
         days=days,
@@ -388,7 +383,7 @@ def add_order():
             except ValueError:
                 error = "Datum muss im Format JJJJ-MM-TT sein."
                 return render_template(
-                    "template/add_order.html",
+                    "add_order.html",
                     supermarkets=supermarkets,
                     products=products,
                     error=error,
@@ -435,7 +430,7 @@ def add_order():
         if not supermarket_id or not items:
             error = "Bitte Supermarkt wählen und mindestens eine gültige Position mit Preis angeben."
             return render_template(
-                "template/add_order.html",
+                "add_order.html",
                 supermarkets=supermarkets,
                 products=products,
                 error=error,
@@ -474,7 +469,7 @@ def add_order():
     # GET: Formular anzeigen
     conn.close()
     return render_template(
-        "template/add_order.html",
+        "add_order.html",
         supermarkets=supermarkets,
         products=products,
         error=error,

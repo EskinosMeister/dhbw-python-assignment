@@ -5,12 +5,13 @@ import os
 
 from flask import Flask, render_template, request, redirect, url_for
 
-from database.my_helpers import get_connection, get_cursor
+from database.my_helpers import get_connection
 
 #DB_PATH = "grocery.db"
 
 app = Flask(__name__)
 app.secret_key = "dev-secret"
+# this is hardcoded for one user... Should work for multiple users. This requires session management.
 CURRENT_USER_ID = "u1"
 
 
@@ -25,7 +26,7 @@ def search():
     query = request.form.get("q", "") if request.method == "POST" else request.args.get("q", "")
 
     conn = get_connection()
-    cur = get_cursor()
+    cur = conn.cursor()
 
     # I don't understand how we could have no query at all
     if query:
@@ -72,7 +73,7 @@ def search():
 def save_product(product_id):
     """Produkt für den aktuellen User auf die Merkliste setzen."""
     conn = get_connection()
-    cur = get_cursor()
+    cur = conn.cursor()
 
     saved_id = f"svp_{int(datetime.now().timestamp() * 1000)}"
     now = datetime.now().isoformat()

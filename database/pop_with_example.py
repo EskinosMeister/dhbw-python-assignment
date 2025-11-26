@@ -1,11 +1,11 @@
 # pop_with_example.py
 from datetime import datetime, timedelta
 
-from my_helpers import get_connection, get_cursor
+from my_helpers import get_connection
 
 def main():
     conn = get_connection()
-    cur = get_cursor()
+    cur = conn.cursor()
     now = datetime.now()
     now_iso = now.isoformat()
 

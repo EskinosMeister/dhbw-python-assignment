@@ -1,4 +1,5 @@
 # pop_with_example.py
+# this script works when run with python direcly in terminal
 from datetime import datetime, timedelta
 
 from my_helpers import get_connection

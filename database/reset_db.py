@@ -1,4 +1,5 @@
 # reset_db.py
+# this only works, if all resources are free. If the server uses grocery.db, the reset won't work
 from my_helpers import get_connection, DB_PATH
 
 destroy_schema = """

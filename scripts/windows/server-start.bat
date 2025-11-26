@@ -1,2 +1,4 @@
 @ECHO OFF
-python app.py
+SET SCRIPT_DIR=%~dp0
+python "%SCRIPT_DIR%..\..\app.py"
+PAUSE

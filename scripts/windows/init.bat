@@ -1,5 +1,7 @@
 @ECHO OFF
-: pip install -r ../../requirements.txt
+SET SCRIPT_DIR=%~dp0
 
-python ../../database/reset_db.py
-python ../../database/db_init.py
+pip install -r "%SCRIPT_DIR%..\..\requirements.txt"
+
+python "%SCRIPT_DIR%..\..\database\reset_db.py"
+python "%SCRIPT_DIR%..\..\database\db_init.py"

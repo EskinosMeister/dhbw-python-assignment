@@ -1,5 +1,18 @@
+/*
+Label: Datenbank-Schema (Strukturdefinition)
+Ersteller: Philip Welter, Jakub Nossowski, Marie Wütz
+Datum: 2025-11-27
+Version: 1.0.0
+
+Kurzbeschreibung des Moduls:
+    Definiert die vollständige Tabellenstruktur (Schema) der SQLite-Datenbank ('grocery.db') 
+    für das Produkt- und Einkaufsverwaltungssystem.
+*/
+
+-- Aktiviert die Unterstützung für Foreign Keys, um die referentielle Integrität zu gewährleisten
 PRAGMA foreign_keys = ON;
 
+-- Tabelle 1: users (Nutzerkonten)
 CREATE TABLE users (
     id TEXT PRIMARY KEY,
     username TEXT NOT NULL,
@@ -7,7 +20,7 @@ CREATE TABLE users (
     password_hash TEXT NOT NULL,
     created_at TEXT NOT NULL
 );
-
+-- Tabelle 2: supermarkets (Erfasste Märkte)
 CREATE TABLE supermarkets (
     id TEXT PRIMARY KEY,
     name TEXT NOT NULL,
@@ -15,6 +28,7 @@ CREATE TABLE supermarkets (
     website TEXT
 );
 
+-- Tabelle 3: products (Produktstammdaten)
 CREATE TABLE products (
     id TEXT PRIMARY KEY,
     name TEXT NOT NULL,
@@ -26,6 +40,7 @@ CREATE TABLE products (
     FOREIGN KEY (created_by_user_id) REFERENCES users(id)
 );
 
+-- Tabelle 4: supermarket_products (Preisinformationen)
 CREATE TABLE supermarket_products (
     id TEXT PRIMARY KEY,
     supermarket_id TEXT NOT NULL,
@@ -37,6 +52,7 @@ CREATE TABLE supermarket_products (
     FOREIGN KEY (product_id) REFERENCES products(id)
 );
 
+-- Tabelle 5: orders (Bestellungen/Einkäufe)
 CREATE TABLE orders (
     id TEXT PRIMARY KEY,
     user_id TEXT NOT NULL,
@@ -47,6 +63,7 @@ CREATE TABLE orders (
     FOREIGN KEY (supermarket_id) REFERENCES supermarkets(id)
 );
 
+-- Tabelle 6: order_items (Positionen einer Bestellung)
 CREATE TABLE order_items (
     id TEXT PRIMARY KEY,
     order_id TEXT NOT NULL,
@@ -57,6 +74,7 @@ CREATE TABLE order_items (
     FOREIGN KEY (product_id) REFERENCES products(id)
 );
 
+-- Tabelle 7: saved_products (Merkliste des Users)
 CREATE TABLE saved_products (
     id TEXT PRIMARY KEY,
     user_id TEXT NOT NULL,

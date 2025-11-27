@@ -28,6 +28,3 @@ python "%SCRIPT_DIR%..\..\database\reset_db.py"
 REM Erstellt die Tabellenstruktur (Schema) neu
 python "%SCRIPT_DIR%..\..\database\db_init.py"
 
-REM Hält das Fenster geöffnet, damit der Benutzer die Ausgaben sehen kann
-
-pause 

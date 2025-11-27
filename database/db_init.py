@@ -15,7 +15,4 @@ def init_tables():
 
 if __name__ == "__main__":
     init_tables()
-    print("DB initialisiert") 
-    """
-    hallo
-    """
+    print("DB initialisiert")  

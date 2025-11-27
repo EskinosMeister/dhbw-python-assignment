@@ -1,4 +1,3 @@
-@ECHO OFF
 ::
 :: Label: Datenbank-Befüllungs-Startskript (Windows)
 :: Ersteller: Philip Welter, Jakub Nossowski, Marie Wütz
@@ -11,6 +10,9 @@
 ::   Es ruft das zentrale Python-Skript `populate_db.py` über einen absoluten Pfad auf.
 ::
 
+REM --- 1. Pfad-Definition ---
+:: Deaktiviert die Anzeige der Befehle im Fenster
+@ECHO OFF
 
 :: Speichert das Verzeichnis, in dem dieses Skript liegt, in der Variable SCRIPT_DIR
 SET SCRIPT_DIR=%~dp0

@@ -1,10 +1,39 @@
 # pop_with_example.py
 # this script works when run with python direcly in terminal
+""" 
+Label: Datenbank-Befüllung mit festen Beispieldaten
+Ersteller: Philip Welter, Jakub Nossowski, Marie Wütz
+Datum: 2025-11-27
+Version: 1.0.0
+Lizenz: Proprietär (für Studienzwecke)
+
+Kurzbeschreibung des Moduls:
+    Dieses Skript befüllt die SQLite-Datenbank (`grocery.db`) mit einem fest definierten Set an Testdaten. 
+    Es dient der schnellen Wiederherstellung einer bekannten Ausgangsbasis (User, Supermärkte, Produkte, Preise und Bestellungen) 
+    für Entwicklungs- und Testzwecke.
+"""
 from datetime import datetime, timedelta
 
 from my_helpers import get_connection
 
 def main():
+    """
+    Label: Feste Testdaten einfügen
+    Kurzbeschreibung:
+        Initialisiert die Datenbankverbindung und führt eine Reihe von INSERT-Anweisungen aus, 
+        um feste Beispiel-Einträge in alle Kerntabellen (`users`, `supermarkets`, `products`, `orders` etc.) einzufügen. 
+        Die Daten umfassen Bestellungen über mehrere Zeiträume zur KPI-Demonstration.
+
+    Parameter:
+        - Keine
+
+    Return:
+        - Keine (Funktion führt DB-Operationen durch und gibt Statusmeldungen aus)
+
+    Tests:
+        1. Vollständigkeit: Es wird mindestens ein User, drei Supermärkte und Bestellungen über 90 Tage eingefügt.
+        2. Zeitstempel: Die Bestellungen werden korrekt mit rückdatierten Zeitstempeln versehen, um die Zeitraumberechnung zu ermöglichen.
+    """
     conn = get_connection()
     cur = conn.cursor()
     now = datetime.now()
@@ -70,6 +99,8 @@ def main():
 
     # Orders grob über mehrere Zeiträume (Zahlen nicht perfekt, aber ok für Demo)
     def d(days_back: int) -> str:
+        """Kleine Hilfsfunktion, um Datumsangaben rückwärts zu berechnen.
+        """
         return (now - timedelta(days=days_back)).isoformat()
 
     orders = [

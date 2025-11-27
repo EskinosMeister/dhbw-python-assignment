@@ -4,19 +4,21 @@
 Label: Datenbank-Zurücksetzungs-Skript
 Ersteller: Philip Welter, Jakub Nossowski, Marie Wütz
 Datum: 2025-11-27
-Version: 1.0.0
+Version: 1.0.1
 Lizenz: Proprietär (für Studienzwecke)
 
 Kurzbeschreibung des Moduls:
     Dieses Skript dient zum vollständigen Zurücksetzen der SQLite-Datenbank. 
-    Es löscht die physische Datenbankdatei (`grocery.db`), falls vorhanden, 
-    und stellt sicher, dass alle Tabellen (Schema) zerstört werden. 
-    Es wird typischerweise vor der Neuanlage der Struktur oder dem Laden neuer Daten verwendet.
+    Es löscht die physische Datenbankdatei (`grocery.db`) und führt zusätzlich 
+    SQL-Anweisungen aus, um alle Tabellen explizit zu entfernen (DROP). 
+    Hinweis: Funktioniert nur, wenn keine andere Anwendung (z.B. der Flask-Server) 
+    die Datenbankdatei aktuell geöffnet hat.
 
 """
 from my_helpers import get_connection, DB_PATH
 
 destroy_schema = """
+-- Aktiviert Foreign Key Support
 PRAGMA foreign_keys = ON;
 
 DROP TABLE IF EXISTS saved_products;

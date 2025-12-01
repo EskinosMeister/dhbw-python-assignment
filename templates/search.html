@@ -1,7 +1,17 @@
+{#DATEI: search.html
+    ZWECK: Template für die Produktsuche und die Anzeige der Preisvergleichsergebnisse.
+    BASIS: Erweitert das Grundlayout 'base.html'.
+    FUNKTIONALITÄT:
+        - Beinhaltet das Suchformular zur Eingabe von Produktname oder Kategorie.
+        - Zeigt die Liste der gefundenen Produkte und deren Preise pro Supermarkt an.
+        - Ermöglicht das Speichern von Produkten auf der Merkliste.
+        - Stellt eine Fallback-Meldung dar, wenn keine Ergebnisse gefunden werden.#}
 {% extends "base.html" %}
-
+ 
+{#Block für den spezifischen HTML-Titel der Seite#}
 {% block title %}Produktsuche – Grocery Vergleich{% endblock %}
-
+ 
+{#Hauptinhalt der Seite (Content Block)#}
 {% block content %}
 <div class="card">
   <h1>Produktsuche</h1>
@@ -9,56 +19,77 @@
     Suche nach einem Lebensmittel (z.&nbsp;B. <strong>Vollmilch</strong>, <strong>Spaghetti</strong>) 
     und vergleiche die Preise in deinen Märkten.
   </p>
-
+  
   <form method="post">
     <div class="search-bar">
       <input
         type="text"
         name="q"
-        value="{{ query }}"
+        value="{{ query or '' }}"
         placeholder="Produktname oder Kategorie eingeben …">
       <button class="btn-primary" type="submit">
-        Suchen
+          Suchen
       </button>
     </div>
   </form>
-
+  
+  {#Jinja2-Bedingung: Prüft, ob Produkte in der Liste 'products' vorhanden sind (Ergebnisse gefunden)#}
   {% if products %}
-    <div class="results-meta">
-      {{ products|length }} Preisangebote gefunden
-      {% if query %}für „{{ query }}“{% endif %}
-    </div>
-    <table>
-      <tr>
-        <th>Produkt</th>
-        <th>Marke</th>
-        <th>Kategorie</th>
-        <th>Supermarkt</th>
-        <th>Preis</th>
-        <th>Aktionen</th>
-      </tr>
-      {% for row in products %}
+  <div class="results-meta">
+    {{ products|length }} Preisangebote gefunden
+    {#Jinja2-Bedingung: Zeigt den Suchbegriff an, wenn er existiert#}
+    {% if query %}für „{{ query }}“{% endif %}
+  </div>
+  <table>
+    <tr>
+      <th>Produkt</th>
+      <th>Marke</th>
+      <th>Kategorie</th>
+      <th>Supermarkt</th>
+      <th>Preis</th>
+      <th>Aktionen</th>
+    </tr>
+    {#Jinja2-Schleife: Iteriert über die Liste der gefundenen Produkte ('products')#}
+    {% for row in products %}
       <tr>
         <td>{{ row["name"] }}</td>
         <td>{{ row["brand"] or "–" }}</td>
         <td>{{ row["category"] or "–" }}</td>
         <td>{{ row["supermarket_name"] }}</td>
+        {#Preis-Ausgabe, formatiert auf zwei Nachkommastellen#}
         <td class="price">{{ "%.2f"|format(row["price"]) }} €</td>
         <td>
+          {# Aldi-Live-Ergebnis (kommt aus dem Crawler) #}
+          {% if row["is_live"] %}
+            {% if row["product_url"] %}
+              <a href="{{ row['product_url'] }}" target="_blank" rel="noopener">
+                Bei Aldi ansehen
+              </a>
+            {% else %}
+              Live-Preis (Aldi)
+          {% endif %}
+
+          {# DB-Produkt: kann in die Merkliste gespeichert werden #}
+          {% elif row["product_id"] %}
           <a href="{{ url_for('save_product', product_id=row['product_id']) }}">
             Auf Merkliste
           </a>
+            {% else %}
+              –
+            {% endif %}
         </td>
       </tr>
-      {% endfor %}
-    </table>
+    {% endfor %}
+  </table>
+  {#Jinja2-Else-Block: Wird angezeigt, wenn keine Produkte gefunden wurden#} 
   {% else %}
     <p class="empty-state">
-      {% if query %}
-        Keine Produkte für „{{ query }}“ gefunden.
-      {% else %}
-        Noch keine Ergebnisse – starte eine Suche, um Angebote zu sehen.
-      {% endif %}
+          {#Jinja2-Bedingung: Zeigt spezifische Meldung an, wenn gesucht wurde, aber nichts gefunden wurde#}
+          {% if query %}
+            Keine Produkte für „{{ query }}“ gefunden.
+          {% else %}
+            Noch keine Ergebnisse – starte eine Suche, um Angebote zu sehen.
+          {% endif %}
     </p>
   {% endif %}
 </div>

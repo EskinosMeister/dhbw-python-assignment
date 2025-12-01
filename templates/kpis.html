@@ -8,7 +8,7 @@
   <p class="subtitle">
     Zeitraum: {{ since }} bis {{ until }} (letzte {{ days }} Tage)
   </p>
-
+  <!-- mein vscode html parser meint es gäbe hier Fehler, aber die KPIs Seite wird aufgerufen, ohne Probleme-->
   <div style="margin-bottom: 16px; font-size: 14px;">
     Zeitraum:
     <a href="{{ url_for('kpis', days=7) }}"

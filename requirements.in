@@ -1,1 +1,5 @@
 flask
+bs4
+requests
+urllib3
+truststore

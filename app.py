@@ -22,13 +22,11 @@ def index():
 
 @app.route("/search", methods=["GET", "POST"])
 def search():
-    # I don't why we would get either GET or POST access methods
     query = request.form.get("q", "") if request.method == "POST" else request.args.get("q", "")
 
     conn = get_connection()
     cur = conn.cursor()
 
-    # I don't understand how we could have no query at all
     if query:
         sql = """
         SELECT

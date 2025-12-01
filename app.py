@@ -62,20 +62,14 @@ def search():
         """
         params = ()
 
-    sql_products = cur.execute(sql, params).fetchall()
+    products = cur.execute(sql, params).fetchall()
     conn.close()
 
     aldi_results = scrape_aldi_sued_top(query)
-
     for result in aldi_results:
-        sql_products.append(result)
-    
-    
-    unified_results = sql_products
-    for result in unified_results:
-        print(result)
+        products.append(result)
 
-    return render_template("search.html", query=query, products=sql_products)
+    return render_template("search.html", query=query, products=products)
 
 
 @app.route("/save_product/<product_id>")

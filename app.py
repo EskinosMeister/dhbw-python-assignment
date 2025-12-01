@@ -64,7 +64,7 @@ def search():
     products = cur.execute(sql, params).fetchall()
     conn.close()
 
-    return render_template("temp_search.html", query=query, products=products)
+    return render_template("search.html", query=query, products=products)
 
 
 @app.route("/save_product/<product_id>")

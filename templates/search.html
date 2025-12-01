@@ -35,52 +35,52 @@
   
   {#Jinja2-Bedingung: Prüft, ob Produkte in der Liste 'products' vorhanden sind (Ergebnisse gefunden)#}
   {% if products %}
-  <div class="results-meta">
-    {{ products|length }} Preisangebote gefunden
-    {#Jinja2-Bedingung: Zeigt den Suchbegriff an, wenn er existiert#}
-    {% if query %}für „{{ query }}“{% endif %}
-  </div>
-  <table>
-    <tr>
-      <th>Produkt</th>
-      <th>Marke</th>
-      <th>Kategorie</th>
-      <th>Supermarkt</th>
-      <th>Preis</th>
-      <th>Aktionen</th>
-    </tr>
-    {#Jinja2-Schleife: Iteriert über die Liste der gefundenen Produkte ('products')#}
-    {% for row in products %}
+    <div class="results-meta">
+      {{ products|length }} Preisangebote gefunden
+      {#Jinja2-Bedingung: Zeigt den Suchbegriff an, wenn er existiert#}
+      {% if query %}für „{{ query }}“{% endif %}
+    </div>
+    <table>
       <tr>
-        <td>{{ row["name"] }}</td>
-        <td>{{ row["brand"] or "–" }}</td>
-        <td>{{ row["category"] or "–" }}</td>
-        <td>{{ row["supermarket_name"] }}</td>
-        {#Preis-Ausgabe, formatiert auf zwei Nachkommastellen#}
-        <td class="price">{{ "%.2f"|format(row["price"]) }} €</td>
-        <td>
-          {# Aldi-Live-Ergebnis (kommt aus dem Crawler) #}
-          {% if row["is_live"] %}
-            {% if row["product_url"] %}
-              <a href="{{ row['product_url'] }}" target="_blank" rel="noopener">
-                Bei Aldi ansehen
-              </a>
-            {% else %}
-              Live-Preis (Aldi)
-          {% endif %}
-
-          {# DB-Produkt: kann in die Merkliste gespeichert werden #}
-          {% elif row["product_id"] %}
-          <a href="{{ url_for('save_product', product_id=row['product_id']) }}">
-            Auf Merkliste
-          </a>
-            {% else %}
-              –
-            {% endif %}
-        </td>
+        <th>Produkt</th>
+        <th>Marke</th>
+        <th>Kategorie</th>
+        <th>Supermarkt</th>
+        <th>Preis</th>
+        <th>Aktionen</th>
       </tr>
-    {% endfor %}
-  </table>
+      {#Jinja2-Schleife: Iteriert über die Liste der gefundenen Produkte ('products')#}
+      {% for row in products %}
+        <tr>
+          <td>{{ row["name"] }}</td>
+          <td>{{ row["brand"] or "–" }}</td>
+          <td>{{ row["category"] or "–" }}</td>
+          <td>{{ row["supermarket_name"] }}</td>
+          {#Preis-Ausgabe, formatiert auf zwei Nachkommastellen#}
+          <td class="price">{{ "%.2f"|format(row["price"]) }} €</td>
+          <td>
+            {# Aldi-Live-Ergebnis (kommt aus dem Crawler) #}
+            {% if row["is_live"] %}
+              {% if row["product_url"] %}
+                <a href="{{ row['product_url'] }}" target="_blank" rel="noopener">
+                  Bei Aldi ansehen
+                </a>
+              {% else %}
+                Live-Preis (Aldi)
+            {% endif %}
+
+            {# DB-Produkt: kann in die Merkliste gespeichert werden #}
+            {% elif row["product_id"] %}
+            <a href="{{ url_for('save_product', product_id=row['product_id']) }}">
+              Auf Merkliste
+            </a>
+              {% else %}
+                –
+              {% endif %}
+          </td>
+        </tr>
+      {% endfor %}
+    </table>
   {#Jinja2-Else-Block: Wird angezeigt, wenn keine Produkte gefunden wurden#} 
   {% else %}
     <p class="empty-state">

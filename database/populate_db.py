@@ -36,7 +36,7 @@ def main():
         2. Beispiel-Auswahl (Eingabe '2'): Das Skript 'pop_with_example.py' wird erfolgreich gestartet und ausgeführt.
         3. Fehlerhafte Eingabe: Bei einer ungültigen Eingabe wird eine Fehlermeldung ausgegeben und das Programm beendet.
         
-        """
+    """
     
     print("How do you want to populate the database?")
     print("1) Using CSV files")

@@ -34,7 +34,6 @@ def get_connection():
     Tests:
         1. Verbindungskonfiguration: Die Row-Factory ist auf sqlite3.Row gesetzt (Zugriff über Spaltenname).
         2. Integrität: Foreign Keys (Fremdschlüssel) sind in der Datenbankverbindung aktiviert.
-    - 
     """
     conn = sqlite3.connect(DB_PATH)
     conn.row_factory = sqlite3.Row

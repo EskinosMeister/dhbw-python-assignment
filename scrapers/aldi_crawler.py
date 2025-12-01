@@ -155,7 +155,7 @@ def scrape_aldi_sued_top(query: str, top_n: int = 3,
         ca_file: Pfad zu CA-Zertifikat
         
     Returns:
-        Liste mit Produkten (Titel, Preis, Grundpreis, URL, Timestamp, Query, Source)
+        Liste von Produkt-Dictionaries (Supermarketname, Produktname, Preis, URL, is_live Wahrheitswert und Timestamp)
     """
     base_url = "https://www.aldi-sued.de/de/suchergebnis.html"
     session = make_session(insecure=insecure, ca_file=ca_file)

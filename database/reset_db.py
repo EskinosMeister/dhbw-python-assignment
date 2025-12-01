@@ -1,5 +1,4 @@
 # reset_db.py
-# this only works, if all resources are free. If the server uses grocery.db, the reset won't work
 """
 Label: Datenbank-Zurücksetzungs-Skript
 Ersteller: Philip Welter, Jakub Nossowski, Marie Wütz

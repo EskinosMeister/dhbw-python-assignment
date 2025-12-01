@@ -1,5 +1,3 @@
-#init.sh
-# 
 # Label: Datenbank-Vorbereitungs-Skript (Minimal)
 # Ersteller: Philip Welter, Jakub Nossowski, Marie Wütz
 # Datum: 2025-11-27
@@ -10,11 +8,11 @@
 #   Dieses Skript automatisiert die Vorbereitung des Projekts, indem es die notwendigen 
 #   Python-Abhängigkeiten installiert, die Datenbank zurücksetzt und die Tabellenstruktur neu erstellt.
 
-#!/bin/bash
+
 
 # --- 1. Python-Abhängigkeiten ---
 # Installiert alle benötigten Python-Pakete aus der requirements.txt Datei.
-# Der Pfad ../../ deutet darauf hin, dass die Datei zwei Verzeichnisse höher liegt.
+#!/bin/bash
 pip install -r ../../requirements.txt
 
 # --- 2. Datenbank-Zurücksetzung und Schema-Erstellung ---

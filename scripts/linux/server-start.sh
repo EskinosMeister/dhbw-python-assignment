@@ -1,5 +1,3 @@
-# start_app.sh (oder wie die Datei auch immer benannt ist)
-# 
 # Label: Anwendungsstart-Skript
 # Ersteller: Philip Welter, Jakub Nossowski, Marie Wütz
 # Datum: 2025-11-27
@@ -9,12 +7,8 @@
 # Kurzbeschreibung des Moduls:
 #   Dieses Skript ist der einfache Startpunkt für die Flask-Webanwendung. 
 #   Es stellt sicher, dass die App über den Python-Interpreter gestartet wird.
-#
-
-#!/bin/bash
 
 # --- Start der Flask-Anwendung ---
 # Führt die zentrale Flask-Anwendungsdatei 'app.py' mit dem Python-Interpreter aus.
-
 #!/bin/bash
 python app.py

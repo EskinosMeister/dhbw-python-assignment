@@ -84,12 +84,12 @@
   {#Jinja2-Else-Block: Wird angezeigt, wenn keine Produkte gefunden wurden#} 
   {% else %}
     <p class="empty-state">
-          {#Jinja2-Bedingung: Zeigt spezifische Meldung an, wenn gesucht wurde, aber nichts gefunden wurde#}
-          {% if query %}
-            Keine Produkte für „{{ query }}“ gefunden.
-          {% else %}
-            Noch keine Ergebnisse – starte eine Suche, um Angebote zu sehen.
-          {% endif %}
+      {#Jinja2-Bedingung: Zeigt spezifische Meldung an, wenn gesucht wurde, aber nichts gefunden wurde#}
+      {% if query %}
+        Keine Produkte für „{{ query }}“ gefunden.
+      {% else %}
+        Noch keine Ergebnisse – starte eine Suche, um Angebote zu sehen.
+      {% endif %}
     </p>
   {% endif %}
 </div>

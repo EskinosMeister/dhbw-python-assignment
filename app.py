@@ -6,6 +6,7 @@ import os
 from flask import Flask, render_template, request, redirect, url_for
 
 from database.my_helpers import get_connection
+from scrapers.aldi_crawler import scrape_aldi_sued_top
 
 #DB_PATH = "grocery.db"
 
@@ -61,10 +62,20 @@ def search():
         """
         params = ()
 
-    products = cur.execute(sql, params).fetchall()
+    sql_products = cur.execute(sql, params).fetchall()
     conn.close()
 
-    return render_template("search.html", query=query, products=products)
+    aldi_results = scrape_aldi_sued_top(query)
+
+    for result in aldi_results:
+        sql_products.append(result)
+    
+    
+    unified_results = sql_products
+    for result in unified_results:
+        print(result)
+
+    return render_template("search.html", query=query, products=sql_products)
 
 
 @app.route("/save_product/<product_id>")

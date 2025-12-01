@@ -19,6 +19,33 @@ except Exception:
 
 
 def make_session(insecure: bool = False, ca_file: Optional[str] = None) -> requests.Session:
+    """
+    Erzeugt und konfiguriert eine `requests.Session` für wiederverwendbare HTTP-Requests.
+
+    Die Session enthält:
+    - Standard-HTTP-Header, die typische Browseranfragen simulieren
+    - Automatisches Wiederholen (Retry) bei bestimmten HTTP-Fehlern
+    - Optionales SSL-Verhalten
+
+    Args:
+        insecure (bool, optional): 
+            Wenn True, wird die SSL-Zertifikatsprüfung deaktiviert. 
+            Standard ist False.
+        ca_file (str, optional): 
+            Pfad zu einem CA-Bundle für HTTPS-Verbindungen. 
+            Fällt auf Umgebungsvariablen `REQUESTS_CA_BUNDLE` oder `ALDI_CA_FILE` zurück, falls None.
+
+    Returns:
+        requests.Session: Eine konfigurierte Session-Instanz, die für HTTP/HTTPS-Requests verwendet werden kann.
+
+    Beispiele:
+        >>> session = make_session()
+        >>> response = session.get("https://example.com")
+        >>> print(response.status_code)
+
+        >>> session = make_session(insecure=True)
+        >>> response = session.get("https://self-signed.example.com")
+    """
     s = requests.Session()
     s.headers.update({
         "User-Agent": (
@@ -78,15 +105,6 @@ def _find_price(el):
     return cand
 
 
-def _find_unitprice(el):
-    """Findet Grundpreis im Element"""
-    return (
-        el.find(string=re.compile(r"€/|je\s", re.I))
-        or el.find("span", class_=re.compile(r"(baseprice|reference|price-per)", re.I))
-        or el.find("div", class_=re.compile(r"(baseprice|reference|price-per)", re.I))
-    )
-
-
 def _find_link(el, base_url):
     """Findet Produkt-Link im Element"""
     a = el.select_one('a[href*="/p/"]') or el.find("a", href=True)
@@ -106,14 +124,32 @@ def _candidate_cards(soup: BeautifulSoup):
     titles = soup.select("h2.at-all-productName-lbl, h2[data-qa='m-article-tile__title']")
     return [t.parent if t and t.parent else t for t in titles]
 
+def split_after_last_caps(s: str):
+    words = s.split()
+    last_caps_index = -1
+    
+    # Find the index of the last fully capitalized word
+    for i, word in enumerate(words):
+        if word.isupper():
+            last_caps_index = i
+    
+    if last_caps_index == -1:
+        # No capital words, return original string and empty string
+        return s, ""
+    
+    # Rebuild the two parts of the string
+    in_caps = " ".join(words[:last_caps_index + 1])
+    normal = " ".join(words[last_caps_index + 1:])
+    return in_caps, normal
 
-def scrape_aldi_sued_top(product_name: str, top_n: int = 3,
+
+def scrape_aldi_sued_top(query: str, top_n: int = 3,
                          insecure: bool = False, ca_file: Optional[str] = None) -> list[dict]:
     """
     Crawlt Aldi Süd nach Produkten.
     
     Args:
-        product_name: Suchbegriff
+        query: Suchbegriff
         top_n: Anzahl der Treffer
         insecure: SSL-Verifizierung deaktivieren
         ca_file: Pfad zu CA-Zertifikat
@@ -124,7 +160,7 @@ def scrape_aldi_sued_top(product_name: str, top_n: int = 3,
     base_url = "https://www.aldi-sued.de/de/suchergebnis.html"
     session = make_session(insecure=insecure, ca_file=ca_file)
 
-    url = f"{base_url}?{urlencode({'search': product_name})}"
+    url = f"{base_url}?{urlencode({'search': query})}"
     
     try:
         resp = session.get(url, timeout=12)
@@ -145,25 +181,27 @@ def scrape_aldi_sued_top(product_name: str, top_n: int = 3,
             continue
 
         title = title_el.get_text(" ", strip=True)
+        brand, product_name = split_after_last_caps(title)
         price_raw = price_el.get_text(" ", strip=True) if hasattr(price_el, "get_text") else str(price_el)
         price = _extract_price_float(price_raw)
         
         if price is None:
             continue
 
-        unit_el = _find_unitprice(card)
-        unit_price = unit_el.get_text(" ", strip=True) if hasattr(unit_el, "get_text") else (unit_el.strip() if unit_el else None)
         product_url = _find_link(card, base_url) or url
+        
 
-        results.append({
-            "source": "Aldi Süd",
-            "query": product_name,
-            "title": title,
-            "price": price,
-            "unit_price": unit_price,
-            "url": product_url,
-            "timestamp": datetime.now().isoformat(timespec="seconds"),
-        })
+        results.append(
+            {
+                "supermarket_name": "Aldi Süd",
+                "name": product_name,
+                "price": price,
+                "brand": brand,
+                "product_url": product_url,
+                "is_live": True,
+                "timestamp": datetime.now().isoformat(timespec="seconds"),
+            }
+        )
         
         if len(results) >= top_n:
             break

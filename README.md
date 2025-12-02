@@ -1,248 +1,325 @@
 # Grocery Tracker – Preisvergleich & Einkaufsanalyse
 
-Dieses Projekt ist eine kleine Full-Stack-Webanwendung auf Basis von **Flask** und **SQLite**, mit der alltägliche Lebensmittel über verschiedene Supermärkte hinweg verglichen und eigene Einkäufe ausgewertet werden können.
+Eine kleine Full-Stack-Webanwendung auf Basis von **Flask** und **SQLite**, mit der du:
+
+- Lebensmittelprodukte über mehrere Supermärkte hinweg vergleichen kannst,
+- eigene Einkäufe erfasst,
+- Ausgaben analysierst (KPIs),
+- und „Was-wäre-wenn“-Szenarien für Ersparnisse durchrechnest.
+
+---
 
 ## Features
 
-- 🔍 **Produktsuche**
-  - Suche nach Produktnamen oder Kategorien (z. B. „Vollmilch“, „Nudeln“).
-  - Anzeige aller verfügbaren Preise je Supermarkt.
-  - Direktes Speichern von Produkten auf eine persönliche Merkliste.
+### 🔍 Produktsuche (`/search`)
+- Suche nach Produktname oder Kategorie (z. B. „Vollmilch“, „Nudeln“).
+- Vergleich der Preise aus der eigenen Datenbank (z. B. Aldi, Rewe, Lidl).
+- Live-Ergänzung durch **Aldi Süd Crawler**:
+  - ruft die Aldi-Süd-Webseite auf,
+  - extrahiert Produktkarten,
+  - liefert aktuelle Preise & Produktlinks zurück.
+- Ergebnisliste kombiniert DB-Produkte und Live-Ergebnisse in einer Tabelle.
+- DB-Produkte lassen sich auf die Merkliste setzen.
 
-- ⭐ **Merkliste**
-  - Produkte können über die Suche auf eine Merkliste gesetzt werden.
-  - Anzeige von Name, Marke, Kategorie und *Gespeichert am* (nur Datum).
+### ⭐ Merkliste (`/saved`)
+- Produkte aus der Suche können gespeichert werden.
+- Anzeige von:
+  - Produktname, Marke, Kategorie,
+  - günstigstem bekannten Preis,
+  - Datum, an dem das Produkt gemerkt wurde.
 
-- 📈 **KPIs (Auswertungen)**
-  - Ausgaben über einen wählbaren Zeitraum: **7 / 30 / 90 Tage**.
-  - Aufteilung der Ausgaben:
-    - nach Supermarkt (Tabelle + Balkendiagramm via Chart.js),
-    - nach Produktkategorien (z. B. Milch, Nudeln, Butter).
-  - Zeiträume können per Button umgeschaltet werden, KPIs aktualisieren sich dynamisch.
+### ➕ Manuelle Produkte anlegen (`/add_product`)
+- Eigene Produkte mit:
+  - Name (Pflicht),
+  - Marke (optional),
+  - Kategorie (optional),
+  anlegen.
+- Preise pro Supermarkt im Formular eingeben.
+- Neue Produkte erscheinen danach in der Suche und im Vergleich.
 
-- 💡 **Ersparnis-Rechner („Was-wäre-wenn“)**  
-  Route `/savings`
-  - Zeitraum wählbar (7 / 30 / 90 Tage).
-  - Auswahl eines Referenz-Supermarkts (z. B. Aldi/Rewe/Lidl).
-  - Vergleich:
-    - tatsächliche Ausgaben in allen Märkten,
-    - hypothetische Ausgaben, wenn alles im Referenzmarkt gekauft worden wäre,
-    - potentielle Ersparnis oder Mehrkosten,
-    - Detailtabelle pro Position (Ist-Preis vs. Referenz-Preis).
+### 🧾 Bestellungen erfassen (`/add_order`)
+- Erfasse neue Einkäufe mit:
+  - Datum (optional, sonst heute),
+  - Supermarkt,
+  - bis zu 3 Produktpositionen mit Mengen.
+- Preise werden automatisch aus `supermarket_products` für den gewählten Markt gezogen.
+- Es werden angelegt:
+  - ein Eintrag in `orders`,
+  - mehrere Einträge in `order_items`.
+- Neue Bestellungen fließen direkt in KPIs und Ersparnis-Berechnung ein.
 
-- ➕ **Manuelle Produkte hinzufügen**
-  - Neues Produkt mit Name, Marke und Kategorie anlegen.
-  - Preise für vorhandene Supermärkte direkt im Formular eintragen.
-  - Produkt erscheint danach in der Suche (inkl. Vergleich über Märkte) und kann wie alle anderen gespeichert werden.
+### 📊 KPIs – Ausgabenanalyse (`/kpis`)
+- Zeitraum wählbar: **7 / 30 / 90 Tage**.
+- Ausgabenübersicht:
+  - Gesamtbetrag im Zeitraum,
+  - Ausgaben nach Supermarkt (Tabelle + Balkendiagramm via Chart.js),
+  - Ausgaben nach Kategorie.
+- Dynamische Umschaltung des Zeitraums über Buttons.
 
-- 🧾 **Neue Bestellungen erfassen**
-  - Formular „Neue Bestellung“:
-    - Datum (optional, sonst heute),
-    - Supermarkt,
-    - bis zu 3 Produktpositionen mit Mengen.
-  - Preise werden automatisch aus den hinterlegten `supermarket_products` gezogen.
-  - Die Bestellung wird in `orders` und `order_items` gespeichert und fließt sofort in:
-    - KPIs,
-    - Ersparnis-Rechner,
-    - zukünftige Analysen ein.
+### 💡 Ersparnis-Rechner (`/savings`)
+- Zeitraum wählbar: **7 / 30 / 90 Tage**.
+- Auswahl eines Referenz-Supermarkts.
+- Berechnet u. a.:
+  - tatsächliche Ausgaben,
+  - vergleichbare Ausgaben (nur Produkte, die es auch im Referenzmarkt gibt),
+  - hypothetische Ausgaben im Referenzmarkt,
+  - potentielle **Ersparnis** oder **Mehrkosten**.
+- Detailtabelle pro Position:
+  - Ist-Preis vs. Referenz-Preis,
+  - Zeilen-Differenz.
 
 ---
 
 ## Technischer Überblick
 
-**Stack**
+### Stack
 
-- Backend: [Flask](https://flask.palletsprojects.com/)
-- Datenbank: SQLite (`grocery.db`)
-- Templates: Jinja2 (`templates/…`)
-- Frontend: klassisches serverseitiges Rendering (HTML + etwas inline CSS)
-- Diagramme: [Chart.js](https://www.chartjs.org/) per CDN für Balkendiagramme
+- Backend: **Flask**
+- Datenbank: **SQLite** (`grocery.db`)
+- Templates: **Jinja2**
+- Frontend: serverseitig gerendertes HTML + etwas inline CSS
+- Diagramme: **Chart.js** (via CDN)
+- Crawler: **requests + BeautifulSoup**
 
-**Wichtige Dateien**
+### Projektstruktur
 
-- `app.py`  
-  Hauptapplikation (Flask), Routing und Business-Logik:
-  - `/` → Redirect auf `/search`
-  - `/search` → Produktsuche & Preisvergleich
-  - `/saved` → Merkliste
-  - `/kpis` → KPI-Dashboard mit Zeitraumauswahl + Diagramm
-  - `/savings` → Ersparnis-Berechnung „Was wäre wenn alles bei X?“
-  - `/add_product` → Produkt manuell anlegen
-  - `/add_order` → Neue Bestellung erfassen
+```text
+dhbw-python-assignment/
+├─ app.py                 # Flask-App, Routing & Business-Logik
+├─ grocery.db             # SQLite-Datenbank (wird erzeugt / zurückgesetzt)
+├─ README.md
+├─ requirements.in / .txt # Python-Abhängigkeiten
+│
+├─ database/
+│  ├─ my_helpers.py       # get_connection(), Pfadlogik für grocery.db
+│  ├─ db_init.py          # liest schema.sql und erzeugt Tabellen
+│  ├─ schema.sql          # SQL-Schema aller Tabellen
+│  ├─ reset_db.py         # DB-Datei löschen + Tabellen droppen
+│  ├─ populate_db.py      # interaktives Menü: CSV vs. Beispieldaten
+│  ├─ pop_with_csv.py     # befüllt DB aus CSV-Dateien in /data
+│  └─ pop_with_example.py # befüllt DB mit fest codierten Testdaten
+│
+├─ scrapers/
+│  └─ aldi_crawler.py     # Aldi Süd Crawler (Live-Preise)
+│
+├─ scripts/
+│  ├─ linux/
+│  │  ├─ init.sh          # Dependencies installieren, DB resetten & Schema anlegen
+│  │  ├─ populate_db.sh   # ruft populate_db.py auf
+│  │  └─ server-start.sh  # startet Flask-App (python app.py)
+│  └─ windows/
+│     ├─ init.bat
+│     ├─ populate_db.bat
+│     └─ server-start.bat
+│
+└─ templates/
+   ├─ base.html           # Grundlayout & Navigation
+   ├─ search.html         # Produktsuche & Preistabelle
+   ├─ saved.html          # Merkliste
+   ├─ add_product.html    # Produkt anlegen
+   ├─ add_order.html      # Bestellung erfassen
+   ├─ kpis.html           # KPI-Dashboard + Chart.js
+   └─ savings.html        # Ersparnis-Analyse
 
-- `database.py`  
-  Stellt die Verbindung zur SQLite-Datenbank bereit (Helper-Funktion `get_connection()`).
 
-- `reset_db.py`  
-  Löscht die vorhandene `grocery.db`, legt das Schema neu an und füllt die Tabellen mit Testdaten (Produkte, Supermärkte, Orders, Order-Items usw.).  
-  → Praktisch, um einen definierten Ausgangszustand zu bekommen.
+Installation & Setup
+1. Repository klonen
+git clone <URL ZU DIESEM REPO>
+cd dhbw-python-assignment
 
-- `schema.sql`  
-  SQL-Schema der Datenbank (Tabellen `users`, `supermarkets`, `products`, `supermarket_products`, `orders`, `order_items`, `saved_products`).
+2. Virtuelle Umgebung (empfohlen)
+python -m venv .venv
+# Windows:
+.venv\Scripts\activate
+# Linux/macOS:
+source .venv/bin/activate
 
-- `templates/`  
-  - `base.html` – Grundlayout, Navigation, Styling.
-  - `search.html` – Produktsuche & Vergleichstabelle.
-  - `saved.html` – Merkliste.
-  - `kpis.html` – KPI-Dashboard mit Zeitraum-Buttons + Chart.js-Diagramm.
-  - `savings.html` – Ersparnis-Rechner mit Zusammenfassung & Detailtabelle.
-  - `add_product.html` – Formular zum Anlegen eines neuen Produkts.
-  - `add_order.html` – Formular zum Erfassen einer neuen Bestellung.
-  - (optional) `cheapest.html` – Ansicht für günstigsten Markt, falls genutzt.
+3. Abhängigkeiten installieren
+pip install -r requirements.txt
 
-- `data/` (falls vorhanden)  
-  CSV-Dateien mit Beispiel- oder Seed-Daten, die zum initialen Befüllen genutzt wurden.
 
----
+Datenbank vorbereiten
 
-## Installation & Setup
+Es gibt zwei Wege: manuell mit Python oder über die Skripte.
 
-### Voraussetzungen
+Variante A: Direkt mit Python
 
-- Python 3.10+ (getestet mit 3.13)
-- `pip` installiert
+DB zurücksetzen (falls vorhanden):
 
-Empfohlen: virtuelles Environment (aber optional).
+python database/reset_db.py
 
-### 1. Abhängigkeiten installieren
 
-Im Projektordner:
+Schema anlegen:
 
-```bash
-pip install flask
+python database/db_init.py
 
-### Neues UML
 
-// Grocery Tracker – aktuelles Datenmodell
+DB befüllen (interaktiv):
 
-title Grocery Product Comparison Platform Data Model
+python database/populate_db.py
 
-// ----- Tabellen -----
 
-users [icon: user, color: yellow]{
-  id string pk
-  username string
-  email string
-  password_hash string
-  created_at timestamp
+Du wirst gefragt:
+
+1 → Befüllung aus CSV-Dateien (data/*.csv)
+
+2 → Befüllung mit fest codierten Beispieldaten
+
+Variante B: über Skripte
+Linux
+cd scripts/linux
+./init.sh         # Installiert Requirements, reset_db, db_init
+./populate_db.sh  # Startet populate_db.py (CSV oder Beispiele wählen)
+
+Windows
+cd scripts/windows
+init.bat
+populate_db.bat
+
+
+Anwendung starten
+Direkt mit Python
+
+Im Projektroot:
+
+python app.py
+
+
+Die Flask-App startet im Debug-Modus (Standard: http://127.0.0.1:5000/).
+
+Über Startskript (Linux/Windows)
+# Linux
+cd scripts/linux
+./server-start.sh
+
+# Windows
+cd scripts/windows
+server-start.bat
+
+Wichtige Routen
+
+/ → Redirect auf /search
+
+/search → Produktsuche + Preisvergleich (DB + Aldi-Crawler)
+
+/saved → Merkliste
+
+/add_product → eigenes Produkt anlegen
+
+/add_order → neue Bestellung erfassen
+
+/kpis → KPI-Dashboard (7/30/90 Tage)
+
+/savings → Ersparnis-Rechner
+
+Aldi Süd Crawler
+
+Ort: scrapers/aldi_crawler.py
+
+Baut eine requests.Session mit Retry-Logik und Browser-ähnlichen HTTP-Headern.
+
+Sucht auf der Aldi-Süd-Seite nach Produkten (search-Parameter).
+
+Extrahiert:
+
+Titel (inkl. Marke),
+
+Preis,
+
+Produktlink,
+
+Timestamp.
+
+Rückgabeformat (vereinfacht):
+
+{
+    "supermarket_name": "Aldi Süd",
+    "name": "...",
+    "brand": "...",
+    "price": 0.99,
+    "product_url": "...",
+    "is_live": True,
+    "timestamp": "2025-11-27T12:34:56"
 }
 
-supermarkets [icon: shopping-cart, color: green]{
-  id string pk
-  name string
-  location string
-  website string
-}
 
-products [icon: package, color: blue]{
-  id string pk
-  name string
-  brand string
-  category string
-  created_by_user_id string      // u.a. für manuell angelegte Produkte
-  is_user_created boolean        // true = über GUI hinzugefügt
-  created_at timestamp
-}
+In app.py werden diese Live-Ergebnisse mit den DB-Ergebnissen zusammen in search.html angezeigt.
 
-supermarket_products [icon: tag, color: orange]{
-  id string pk
-  supermarket_id string          // z.B. Aldi, Rewe, Lidl
-  product_id string              // verweist auf products
-  price decimal                  // aktueller Preis
-  available boolean
-  last_updated timestamp
-}
+Datenmodell (UML/ER-Diagramm)
 
-orders [icon: file-text, color: purple]{
-  id string pk
-  user_id string                 // aktueller User (z.B. u1)
-  order_date timestamp           // für 7/30/90-Tage-KPIs
-  supermarket_id string          // wo wurde eingekauft
-  total_amount decimal           // Summe aus den order_items
-}
+Das Kern-Datenmodell der Anwendung besteht aus sieben Tabellen.
+Das folgende Mermaid-Diagramm beschreibt die Struktur:
 
-order_items [icon: shopping-bag, color: pink]{
-  id string pk
-  order_id string                // gehört zu einer Bestellung
-  product_id string              // welches Produkt
-  quantity integer               // Menge
-  price_at_purchase decimal      // Preis zum Kaufzeitpunkt
-}
+erDiagram
+    USERS {
+        string id PK
+        string username
+        string email
+        string password_hash
+        string created_at
+    }
 
-saved_products [icon: star, color: gold]{
-  id string pk
-  user_id string                 // wem gehört_
+    SUPERMARKETS {
+        string id PK
+        string name
+        string location
+        string website
+    }
+
+    PRODUCTS {
+        string id PK
+        string name
+        string brand
+        string category
+        string created_by_user_id FK
+        int    is_user_created
+        string created_at
+    }
+
+    SUPERMARKET_PRODUCTS {
+        string id PK
+        string supermarket_id FK
+        string product_id FK
+        float  price
+        int    available
+        string last_updated
+    }
+
+    ORDERS {
+        string id PK
+        string user_id FK
+        string order_date
+        string supermarket_id FK
+        float  total_amount
+    }
+
+    ORDER_ITEMS {
+        string id PK
+        string order_id FK
+        string product_id FK
+        int    quantity
+        float  price_at_purchase
+    }
+
+    SAVED_PRODUCTS {
+        string id PK
+        string user_id FK
+        string product_id FK
+        string saved_at
+    }
+
+    USERS ||--o{ PRODUCTS            : "creates (optional)"
+    USERS ||--o{ ORDERS              : "places"
+    USERS ||--o{ SAVED_PRODUCTS      : "saves"
+
+    SUPERMARKETS ||--o{ SUPERMARKET_PRODUCTS : "offers"
+    SUPERMARKETS ||--o{ ORDERS               : "used_for"
+
+    PRODUCTS ||--o{ SUPERMARKET_PRODUCTS : "priced_in"
+    PRODUCTS ||--o{ ORDER_ITEMS          : "contained_in"
+    PRODUCTS ||--o{ SAVED_PRODUCTS       : "bookmarked_as"
+
+    ORDERS ||--o{ ORDER_ITEMS : "has_items"
 
 
-### Altes UML
-
-title Grocery Product Comparison Platform Data Model
-
-// define tables
-users [icon: user, color: yellow]{
-  id string pk
-  username string
-  email string
-  password_hash string
-  created_at timestamp
-}
-
-supermarkets [icon: shopping-cart, color: green]{
-  id string pk
-  name string
-  location string
-  website string
-}
-
-products [icon: package, color: blue]{
-  id string pk
-  name string
-  brand string
-  category string
-  created_by_user_id string
-  is_user_created boolean
-  created_at timestamp
-}
-
-supermarket_products [icon: tag, color: orange]{
-  id string pk
-  supermarket_id string
-  product_id string
-  price decimal
-  available boolean
-  last_updated timestamp
-}
-
-orders [icon: file-text, color: purple]{
-  id string pk
-  user_id string
-  order_date timestamp
-  supermarket_id string
-  total_amount decimal
-}
-
-order_items [icon: shopping-bag, color: pink]{
-  id string pk
-  order_id string
-  product_id string
-  quantity integer
-  price_at_purchase decimal
-}
-
-saved_products [icon: star, color: gold]{
-  id string pk
-  user_id string
-  product_id string
-  saved_at timestamp
-}
-
-// define relationships
-products.created_by_user_id > users.id
-supermarket_products.supermarket_id > supermarkets.id
-supermarket_products.product_id > products.id
-orders.user_id > users.id
-orders.supermarket_id > supermarkets.id
-order_items.order_id > orders.id
-order_items.product_id > products.id
-saved_products.user_id > users.id
-saved_products.product_id > products.id
+Dieses Modell entspricht 1:1 der schema.sql und bildet die Grundlage für Suche, KPIs, Ersparnis-Berechnung und Merkliste.

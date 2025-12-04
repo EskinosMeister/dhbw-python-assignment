@@ -74,7 +74,7 @@ Eine kleine Full-Stack-Webanwendung auf Basis von **Flask** und **SQLite**, mit 
 ### Stack
 
 - Backend: **Flask**
-- Datenbank: **SQLite** (`grocery.db`)
+- Datenbank: **SQLite3** (`grocery.db`)
 - Templates: **Jinja2**
 - Frontend: serverseitig gerendertes HTML + etwas inline CSS
 - Diagramme: **Chart.js** (via CDN)
@@ -123,17 +123,16 @@ dhbw-python-assignment/
 
 ## Installation & Setup
 1. Repository klonen  
-git clone <URL ZU DIESEM REPO>
-cd dhbw-python-assignment
+git clone https://github.com/EskinosMeister/dhbw-python-assignment
 
-2. Virtuelle Umgebung (empfohlen) 
-python -m venv .venv
-Windows:
-.venv\Scripts\activate
-Linux/macOS:
-source .venv/bin/activate
+3. Virtuelle Umgebung (empfohlen)  
+```python -m venv .venv```
+    - Windows:  
+      ```.venv\Scripts\activate```
+    - Linux/macOS:  
+      ```source .venv/bin/activate```
 
-3. Datenbank vorbereiten  
+4. Datenbank vorbereiten  
 Es gibt zwei Wege: manuell mit Python oder über die Skripte.
     - Variante A: Direkt mit Python
       - DB zurücksetzen (falls vorhanden):  
@@ -146,18 +145,18 @@ Es gibt zwei Wege: manuell mit Python oder über die Skripte.
         1 → Befüllung aus CSV-Dateien (`data/*.csv`)  
         2 → Befüllung mit fest codierten Beispieldaten
     - Variante B: über Skripte
-      - Linux
+      - Linux  
       ```
       ./init.sh         # Installiert Requirements, reset_db, db_init
       ./populate_db.sh  # Startet populate_db.py
       ```
-      - Windows
+      - Windows  
       ```
       init.bat
       populate_db.bat
       ```
 
-4. Anwendung starten  
+5. Anwendung starten  
 Die Flask-App startet im Debug-Modus (Standard: http://127.0.0.1:5000/).
     - Direkt mit Python
       ```python app.py```
@@ -166,7 +165,3 @@ Die Flask-App startet im Debug-Modus (Standard: http://127.0.0.1:5000/).
         ```./server-start.sh```
       - Windows
         ```server-start.bat```
-        
-## Datenmodell
-siehe schema.sql
-

@@ -122,11 +122,11 @@ dhbw-python-assignment/
 ```
 
 ## Installation & Setup
-1. Repository klonen
+1. Repository klonen  
 git clone <URL ZU DIESEM REPO>
 cd dhbw-python-assignment
 
-2. Virtuelle Umgebung (empfohlen)
+2. Virtuelle Umgebung (empfohlen) 
 python -m venv .venv
 Windows:
 .venv\Scripts\activate
@@ -157,7 +157,7 @@ Es gibt zwei Wege: manuell mit Python oder über die Skripte.
       populate_db.bat
       ```
 
-4. Anwendung starten
+4. Anwendung starten  
 Die Flask-App startet im Debug-Modus (Standard: http://127.0.0.1:5000/).
     - Direkt mit Python
       ```python app.py```
@@ -169,3 +169,4 @@ Die Flask-App startet im Debug-Modus (Standard: http://127.0.0.1:5000/).
         
 ## Datenmodell
 siehe schema.sql
+
